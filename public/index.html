@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commission UEMOA - Traçabilité POC</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🏛️ Commission UEMOA</h1>
+            <p>Système de Traçabilité - Interconnexion des Systèmes Douaniers</p>
+            <div class="status" id="status">
+                <span class="status-indicator" id="status-indicator">🔴</span>
+                <span id="status-text">Vérification...</span>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="card metrics">
+                <h2>📊 Métriques Globales</h2>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-value" id="operations-total">0</div>
+                        <div class="metric-label">Opérations Total</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="operations-aujourd-hui">0</div>
+                        <div class="metric-label">Aujourd'hui</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="pays-actifs">0</div>
+                        <div class="metric-label">Pays Actifs</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="corridors-actifs">0</div>
+                        <div class="metric-label">Corridors</div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="chargerStatistiques()">🔄 Actualiser</button>
+            </section>
+
+            <section class="card">
+                <h2>📈 Opérations par Type</h2>
+                <canvas id="chart-operations-type" width="400" height="200"></canvas>
+            </section>
+
+            <section class="card">
+                <h2>🗺️ Corridors les Plus Actifs</h2>
+                <div id="corridors-list">
+                    <p>Chargement...</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>🌍 Activité par Pays</h2>
+                <canvas id="chart-pays-activite" width="400" height="200"></canvas>
+            </section>
+
+            <section class="card full-width">
+                <h2>📋 Opérations Récentes</h2>
+                <div class="operations-controls">
+                    <button class="btn btn-primary" onclick="chargerOperations()">🔄 Actualiser</button>
+                    <button class="btn btn-secondary" onclick="exporterDonnees()">📥 Exporter</button>
+                </div>
+                <div id="operations-list">
+                    <p>Chargement des opérations...</p>
+                </div>
+            </section>
+
+            <section class="card full-width">
+                <h2>🎯 Simulation Temps Réel</h2>
+                <p>Ce dashboard se met à jour automatiquement quand les systèmes douaniers échangent des données via le Kit d'Interconnexion.</p>
+                <div class="simulation-controls">
+                    <button class="btn btn-accent" onclick="simulerOperationTest()">
+                        🧪 Simuler Opération Test
+                    </button>
+                    <button class="btn btn-accent" onclick="viderDonnees()">
+                        🗑️ Vider Données
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="notification" class="notification"></div>
+    <script src="script.js"></script>
+</body>
+</html>
