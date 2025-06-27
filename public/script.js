@@ -1,5 +1,5 @@
 // Configuration API
-const API_BASE = window.location.origin + '/api';
+const API_BASE = 'https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io/api';
 let statusInterval;
 let refreshInterval;
 let chartOperationsType;
