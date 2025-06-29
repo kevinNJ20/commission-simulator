@@ -1,4 +1,4 @@
-const db = require('../lib/database');Add commentMore actions
+const db = require('../lib/database');
 const analytics = require('../lib/analytics');
 
 module.exports = async (req, res) => {

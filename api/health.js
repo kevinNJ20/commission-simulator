@@ -1,4 +1,4 @@
-module.exports = async (req, res) => {Add commentMore actions
+module.exports = async (req, res) => {
   // Configuration CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -31,4 +31,4 @@ module.exports = async (req, res) => {Add commentMore actions
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
-};Add comment
+};
