@@ -228,13 +228,13 @@ async function lancerDiagnostic() {
     console.log('🖥️ Test Console Access...');
     diagnostic.tests.console = await testerEndpointKit('/console', 'GET');
     
-    // Test 3: Endpoint Traçabilité (spécifique Commission UEMOA)
+    // Test 3: Endpoint Traçabilité (✅ CORRECTION codes pays)
     console.log('📊 Test endpoint traçabilité...');
     diagnostic.tests.tracabiliteEnregistrer = await testerEndpointKit('/tracabilite/enregistrer', 'POST', {
         typeOperation: 'TEST_DIAGNOSTIC',
         numeroOperation: `TEST_DIAG_${Date.now()}`,
-        paysOrigine: 'TEST',
-        paysDestination: 'TEST',
+        paysOrigine: 'TST', // ✅ CORRECTION: 3 lettres
+        paysDestination: 'TST', // ✅ CORRECTION: 3 lettres
         donneesMetier: {
             test: true,
             source: 'COMMISSION_UEMOA_DIAGNOSTIC'
@@ -290,12 +290,18 @@ async function testerEndpointKit(endpoint, method = 'GET', testData = null) {
             signal: AbortSignal.timeout(5000)
         };
         
-        // Pour les tests POST, ajouter des données test
+        // ✅ CORRECTION: données test par défaut avec codes pays valides
         if (method === 'POST') {
             options.body = JSON.stringify(testData || {
-                test: true,
-                timestamp: new Date().toISOString(),
-                source: 'COMMISSION_UEMOA_DIAGNOSTIC'
+                typeOperation: 'TEST_DIAGNOSTIC',
+                numeroOperation: `DIAG_${Date.now()}`,
+                paysOrigine: 'TST', // ✅ CORRECTION: 3 lettres
+                paysDestination: 'TST', // ✅ CORRECTION: 3 lettres
+                donneesMetier: {
+                    test: true,
+                    timestamp: new Date().toISOString(),
+                    source: 'COMMISSION_UEMOA_DIAGNOSTIC'
+                }
             });
         }
         
@@ -329,8 +335,8 @@ async function testerEnvoiTracabiliteKit() {
     const operationTest = {
         typeOperation: 'TEST_INTEGRATION',
         numeroOperation: `TEST_TRACE_${Date.now()}`,
-        paysOrigine: 'TEST',
-        paysDestination: 'TEST',
+        paysOrigine: 'TST', // ✅ CORRECTION: 3 lettres
+        paysDestination: 'TST', // ✅ CORRECTION: 3 lettres
         donneesMetier: {
             test: true,
             source: 'Commission UEMOA Dashboard',
@@ -578,8 +584,8 @@ async function simulerOperationTest() {
         const operationTest = {
             typeOperation: 'TEST_COMMISSION',
             numeroOperation: `COMM_TEST_${Date.now()}`,
-            paysOrigine: 'TEST',
-            paysDestination: 'TEST',
+            paysOrigine: 'TST', // ✅ CORRECTION: 3 lettres au lieu de "TEST"
+            paysDestination: 'TST', // ✅ CORRECTION: 3 lettres au lieu de "TEST"
             donneesMetier: {
                 test: true,
                 source: 'Commission UEMOA Dashboard',
@@ -611,6 +617,7 @@ async function simulerOperationTest() {
         afficherNotification('❌ Erreur technique lors de la simulation', 'error');
     }
 }
+
 
 // Vider toutes les données (reste inchangé)
 async function viderDonnees() {

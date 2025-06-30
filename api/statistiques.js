@@ -13,11 +13,12 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     try {
-      const statistiquesGlobales = db.getStatistiquesGlobales();
-      const statistiquesParPays = db.getStatistiquesParPays();
-      const operationsParType = db.getOperationsParType();
-      const corridorsActifs = db.getOperationsParCorridor();
-      const operationsRecentes = db.getOperations(10);
+      // ✅ CORRECTION: Utiliser les vrais noms des méthodes de database.js
+      const statistiquesGlobales = db.obtenirStatistiquesGlobales(); // ✅ obtenir au lieu de get
+      const statistiquesParPays = db.obtenirStatistiquesParPays(); // ✅ obtenir au lieu de get
+      const operationsParType = db.obtenirOperationsParType(); // ✅ obtenir au lieu de get
+      const corridorsActifs = db.obtenirCorridorsActifs(); // ✅ obtenirCorridorsActifs au lieu de getOperationsParCorridor
+      const operationsRecentes = db.obtenirOperations(10); // ✅ obtenir au lieu de get
       
       res.status(200).json({
         global: statistiquesGlobales,
@@ -28,9 +29,11 @@ module.exports = async (req, res) => {
       });
       
     } catch (error) {
+      console.error('❌ Erreur récupération statistiques:', error);
       res.status(500).json({
         error: 'Erreur récupération statistiques',
-        message: error.message
+        message: error.message,
+        timestamp: new Date().toISOString()
       });
     }
   } else {
