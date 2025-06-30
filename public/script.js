@@ -1,15 +1,18 @@
-// Configuration API
+// Configuration API - COMMISSION UEMOA CORRIGÉ
 const API_BASE = window.location.origin + '/api';
-const KIT_URL = 'https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io';
+const KIT_MULESOFT_URL = 'https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io/api/v1';
+window.SYSTEME_TYPE = 'COMMISSION_UEMOA';
+window.ORGANISME_CODE = 'UEMOA';
 
 let statusInterval;
 let refreshInterval;
 let chartOperationsType;
 let chartPaysActivite;
+let kitConnected = false;
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initialisation Dashboard Commission UEMOA');
+    console.log('🚀 Initialisation Commission UEMOA - Monitoring Kit MuleSoft avec Test Direct');
     
     // Initialiser les graphiques
     initGraphiques();
@@ -26,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ajouterLogOperation('SYSTEME', 'Commission UEMOA', 'Système de traçabilité démarré - Monitoring Kit activé');
 });
 
-// Vérification du statut du service
+// Vérification du statut du service (via API locale pour le monitoring continu)
 async function verifierStatut() {
     try {
         const response = await fetch(`${API_BASE}/health`);
@@ -52,7 +55,326 @@ async function verifierStatut() {
     }
 }
 
-// Initialisation des graphiques
+// ✅ CORRECTION: Test de connexion Kit DIRECT vers MuleSoft
+async function testerConnexionKit() {
+    ajouterLogOperation('🔧 Test connexion Kit', 'Test connectivité directe vers Kit MuleSoft...');
+    
+    const startTime = Date.now();
+    
+    try {
+        // ✅ APPEL DIRECT vers le Kit MuleSoft
+        const response = await fetch(`${KIT_MULESOFT_URL}/health`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Source-System': 'COMMISSION_UEMOA_DASHBOARD',
+                'X-Source-Country': window.ORGANISME_CODE,
+                'User-Agent': 'CommissionUEMOA-Dashboard/1.0'
+            },
+            signal: AbortSignal.timeout(10000) // 10 secondes timeout
+        });
+        
+        const latence = Date.now() - startTime;
+        
+        if (response.ok) {
+            const data = await response.json();
+            afficherNotification(`✅ Kit MuleSoft accessible - ${response.status} (${latence}ms)`, 'success');
+            ajouterLogOperation('🔧 Test Kit Direct', `✅ Succès - Latence: ${latence}ms, Version: ${data.version || 'N/A'}`);
+            
+            // Log détaillé du Kit
+            console.log('📊 Réponse Kit MuleSoft:', data);
+            kitConnected = true;
+            
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+    } catch (error) {
+        const latence = Date.now() - startTime;
+        let messageErreur = 'Kit MuleSoft inaccessible';
+        
+        if (error.name === 'TimeoutError') {
+            messageErreur = 'Timeout - Kit MuleSoft ne répond pas (>10s)';
+        } else if (error.message.includes('CORS')) {
+            messageErreur = 'Erreur CORS - Configuration Kit à vérifier';
+        } else if (error.message.includes('Failed to fetch')) {
+            messageErreur = 'Erreur réseau - Kit MuleSoft inaccessible';
+        } else {
+            messageErreur = `Erreur: ${error.message}`;
+        }
+        
+        afficherNotification(`❌ ${messageErreur} (${latence}ms)`, 'error');
+        ajouterLogOperation('🔧 Test Kit Direct', `❌ Échec - ${messageErreur}`);
+        kitConnected = false;
+    }
+}
+
+// ✅ NOUVEAU: Test complet (Direct + Via API locale)
+async function testerConnexionKitComplet() {
+    ajouterLogOperation('🔍 Test complet', 'Test connectivité Kit - Direct + Via API locale');
+    
+    // Test 1: Direct depuis le browser
+    console.log('🔍 Test 1: Connectivité directe browser → Kit MuleSoft');
+    const testDirect = await testerKitDirect();
+    
+    // Test 2: Via l'API locale 
+    console.log('🔍 Test 2: Connectivité via API locale → Kit MuleSoft');
+    const testViaAPI = await testerKitViaAPI();
+    
+    // Comparaison des résultats
+    const resultats = {
+        testDirect: {
+            accessible: testDirect.accessible,
+            latence: testDirect.latence,
+            source: 'Browser → Kit MuleSoft'
+        },
+        testViaAPI: {
+            accessible: testViaAPI.accessible,
+            latence: testViaAPI.latence,
+            source: 'API Locale → Kit MuleSoft'
+        },
+        coherent: testDirect.accessible === testViaAPI.accessible
+    };
+    
+    console.log('📊 Comparaison tests Kit:', resultats);
+    
+    const message = `Direct: ${testDirect.accessible ? '✅' : '❌'} (${testDirect.latence}ms) | ` +
+                   `API: ${testViaAPI.accessible ? '✅' : '❌'} (${testViaAPI.latence}ms)`;
+    
+    ajouterLogOperation('🔍 Test complet', message);
+    
+    if (!resultats.coherent) {
+        afficherNotification('⚠️ Résultats incohérents entre test direct et API locale', 'warning');
+    } else {
+        afficherNotification('✅ Tests cohérents - Connectivité validée', 'success');
+    }
+    
+    return resultats;
+}
+
+// Test Kit direct (helper function)
+async function testerKitDirect() {
+    const startTime = Date.now();
+    
+    try {
+        const response = await fetch(`${KIT_MULESOFT_URL}/health`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Source-System': 'COMMISSION_UEMOA_DASHBOARD',
+                'X-Source-Country': window.ORGANISME_CODE
+            },
+            signal: AbortSignal.timeout(8000)
+        });
+        
+        const latence = Date.now() - startTime;
+        
+        return {
+            accessible: response.ok,
+            latence,
+            status: response.status
+        };
+        
+    } catch (error) {
+        return {
+            accessible: false,
+            latence: Date.now() - startTime,
+            erreur: error.message
+        };
+    }
+}
+
+// Test Kit via API locale (helper function)  
+async function testerKitViaAPI() {
+    const startTime = Date.now();
+    
+    try {
+        const response = await fetch(`${API_BASE}/health`);
+        const data = await response.json();
+        
+        const latence = Date.now() - startTime;
+        
+        return {
+            accessible: data.status === 'UP',
+            latence
+        };
+        
+    } catch (error) {
+        return {
+            accessible: false,
+            latence: Date.now() - startTime,
+            erreur: error.message
+        };
+    }
+}
+
+// ✅ NOUVEAU: Diagnostic complet Kit MuleSoft (spécifique Commission UEMOA)
+async function lancerDiagnostic() {
+    ajouterLogOperation('🩺 Diagnostic', 'Démarrage diagnostic complet Kit MuleSoft...');
+    afficherNotification('🩺 Diagnostic Kit en cours...', 'info');
+    
+    const diagnostic = {
+        timestamp: new Date().toISOString(),
+        systeme: window.SYSTEME_TYPE,
+        organisme: window.ORGANISME_CODE,
+        tests: {}
+    };
+    
+    // Test 1: Health Check
+    console.log('🏥 Test Health Check...');
+    diagnostic.tests.health = await testerEndpointKit('/health', 'GET');
+    
+    // Test 2: Console Access
+    console.log('🖥️ Test Console Access...');
+    diagnostic.tests.console = await testerEndpointKit('/console', 'GET');
+    
+    // Test 3: Endpoint Traçabilité (spécifique Commission UEMOA)
+    console.log('📊 Test endpoint traçabilité...');
+    diagnostic.tests.tracabiliteEnregistrer = await testerEndpointKit('/tracabilite/enregistrer', 'POST', {
+        typeOperation: 'TEST_DIAGNOSTIC',
+        numeroOperation: `TEST_DIAG_${Date.now()}`,
+        paysOrigine: 'TEST',
+        paysDestination: 'TEST',
+        donneesMetier: {
+            test: true,
+            source: 'COMMISSION_UEMOA_DIAGNOSTIC'
+        }
+    });
+    
+    // Test 4: Endpoint Transmission Manifeste (pour vérifier réception depuis pays)
+    console.log('📋 Test endpoint transmission manifeste...');
+    diagnostic.tests.manifesteTransmission = await testerEndpointKit('/manifeste/transmission', 'GET');
+    
+    // Test 5: Endpoint Notification Paiement (pour vérifier réception depuis pays)
+    console.log('💳 Test endpoint notification paiement...');
+    diagnostic.tests.paiementNotification = await testerEndpointKit('/paiement/notification', 'GET');
+    
+    // Résumé du diagnostic
+    const testsReussis = Object.values(diagnostic.tests).filter(t => t.accessible).length;
+    const totalTests = Object.keys(diagnostic.tests).length;
+    
+    diagnostic.resume = {
+        testsReussis,
+        totalTests,
+        tauxReussite: Math.round((testsReussis / totalTests) * 100),
+        kitOperationnel: testsReussis > 0
+    };
+    
+    console.log('📊 Diagnostic Kit terminé:', diagnostic.resume);
+    
+    const message = `Terminé - ${testsReussis}/${totalTests} tests réussis (${diagnostic.resume.tauxReussite}%)`;
+    ajouterLogOperation('🩺 Diagnostic', message);
+    
+    if (diagnostic.resume.kitOperationnel) {
+        afficherNotification(`✅ Kit opérationnel - ${message}`, 'success');
+    } else {
+        afficherNotification(`❌ Kit défaillant - ${message}`, 'error');
+    }
+    
+    return diagnostic;
+}
+
+// Utilitaire pour tester un endpoint spécifique du Kit
+async function testerEndpointKit(endpoint, method = 'GET', testData = null) {
+    const startTime = Date.now();
+    
+    try {
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Source-System': 'COMMISSION_UEMOA_DASHBOARD',
+                'X-Source-Country': window.ORGANISME_CODE,
+                'X-Test-Type': 'DIAGNOSTIC'
+            },
+            signal: AbortSignal.timeout(5000)
+        };
+        
+        // Pour les tests POST, ajouter des données test
+        if (method === 'POST') {
+            options.body = JSON.stringify(testData || {
+                test: true,
+                timestamp: new Date().toISOString(),
+                source: 'COMMISSION_UEMOA_DIAGNOSTIC'
+            });
+        }
+        
+        const response = await fetch(`${KIT_MULESOFT_URL}${endpoint}`, options);
+        const latence = Date.now() - startTime;
+        
+        return {
+            accessible: response.ok,
+            status: response.status,
+            latence,
+            endpoint,
+            method
+        };
+        
+    } catch (error) {
+        return {
+            accessible: false,
+            status: 0,
+            latence: Date.now() - startTime,
+            endpoint,
+            method,
+            erreur: error.message
+        };
+    }
+}
+
+// ✅ NOUVEAU: Test envoi opération de traçabilité vers Kit (test réel d'intégration)
+async function testerEnvoiTracabiliteKit() {
+    ajouterLogOperation('📊 Test traçabilité', 'Test envoi opération traçabilité vers Kit...');
+    
+    const operationTest = {
+        typeOperation: 'TEST_INTEGRATION',
+        numeroOperation: `TEST_TRACE_${Date.now()}`,
+        paysOrigine: 'TEST',
+        paysDestination: 'TEST',
+        donneesMetier: {
+            test: true,
+            source: 'Commission UEMOA Dashboard',
+            timestamp: new Date().toISOString(),
+            numeroManifeste: `TEST_MAN_${Date.now()}`,
+            transporteur: 'TEST CARRIER'
+        }
+    };
+    
+    try {
+        const startTime = Date.now();
+        
+        const response = await fetch(`${KIT_MULESOFT_URL}/tracabilite/enregistrer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Source-System': 'COMMISSION_UEMOA_DASHBOARD',
+                'X-Source-Country': window.ORGANISME_CODE,
+                'X-Test-Type': 'TRACABILITE_TEST',
+                'Authorization': 'Bearer COMMISSION_TOKEN'
+            },
+            body: JSON.stringify(operationTest),
+            signal: AbortSignal.timeout(10000)
+        });
+        
+        const latence = Date.now() - startTime;
+        
+        if (response.ok) {
+            const data = await response.json();
+            afficherNotification(`✅ Opération traçabilité test envoyée - ${response.status} (${latence}ms)`, 'success');
+            ajouterLogOperation('📊 Test traçabilité', `✅ Succès - ${operationTest.numeroOperation} (${latence}ms)`);
+            console.log('📊 Réponse traçabilité:', data);
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+    } catch (error) {
+        const messageErreur = error.message.includes('Timeout') ? 'Timeout Kit' : error.message;
+        afficherNotification(`❌ Échec test traçabilité: ${messageErreur}`, 'error');
+        ajouterLogOperation('📊 Test traçabilité', `❌ Échec - ${messageErreur}`);
+    }
+}
+
+// Initialisation des graphiques (reste inchangé)
 function initGraphiques() {
     // Graphique Operations par Type
     const ctxType = document.getElementById('chart-operations-type');
@@ -109,7 +431,7 @@ function initGraphiques() {
     });
 }
 
-// Charger toutes les données
+// Charger toutes les données (reste inchangé)
 async function chargerToutesLesDonnees() {
     try {
         await Promise.all([
@@ -123,7 +445,7 @@ async function chargerToutesLesDonnees() {
     }
 }
 
-// Charger les statistiques globales
+// Charger les statistiques globales (reste inchangé)
 async function chargerStatistiques() {
     try {
         const response = await fetch(`${API_BASE}/statistiques`);
@@ -143,7 +465,7 @@ async function chargerStatistiques() {
     }
 }
 
-// Charger et afficher les opérations récentes
+// Charger et afficher les opérations récentes (reste inchangé)
 async function chargerOperations() {
     try {
         const response = await fetch(`${API_BASE}/tracabilite/enregistrer?limite=10`);
@@ -191,7 +513,7 @@ async function chargerOperations() {
     }
 }
 
-// Charger et mettre à jour les graphiques
+// Charger et mettre à jour les graphiques (reste inchangé)
 async function chargerGraphiques() {
     try {
         const response = await fetch(`${API_BASE}/statistiques`);
@@ -220,7 +542,7 @@ async function chargerGraphiques() {
     }
 }
 
-// Afficher la liste des corridors
+// Afficher la liste des corridors (reste inchangé)
 function afficherCorridors(corridors) {
     const corridorsList = document.getElementById('corridors-list');
     
@@ -250,7 +572,7 @@ function afficherCorridors(corridors) {
     }
 }
 
-// Simuler une opération de test pour vérifier l'intégration Kit
+// Simuler une opération de test pour vérifier l'intégration Kit (reste inchangé)
 async function simulerOperationTest() {
     try {
         const operationTest = {
@@ -290,7 +612,7 @@ async function simulerOperationTest() {
     }
 }
 
-// Vider toutes les données (placeholder - à implémenter côté serveur)
+// Vider toutes les données (reste inchangé)
 async function viderDonnees() {
     if (confirm('⚠️ Êtes-vous sûr de vouloir vider toutes les données de traçabilité ?')) {
         try {
@@ -303,7 +625,7 @@ async function viderDonnees() {
     }
 }
 
-// Exporter les données
+// Exporter les données (reste inchangé)
 async function exporterDonnees() {
     try {
         const response = await fetch(`${API_BASE}/statistiques`);
@@ -329,13 +651,13 @@ async function exporterDonnees() {
     }
 }
 
-// Ajouter une entrée dans le log d'activité
+// Ajouter une entrée dans le log d'activité (reste inchangé)
 function ajouterLogOperation(type, source, description) {
     // Cette fonction peut être étendue pour afficher un log d'activité en temps réel
     console.log(`📊 [Commission] ${type}: ${source} - ${description}`);
 }
 
-// Fonctions utilitaires
+// Fonctions utilitaires (reste inchangé)
 function getOperationIcon(type) {
     const icons = {
         'TRANSMISSION_MANIFESTE': '📦',
@@ -344,7 +666,9 @@ function getOperationIcon(type) {
         'TEST_COMMISSION': '🧪',
         'TEST_SIMULATION': '🔬',
         'TRANSIT': '🚛',
-        'DECLARATION': '📋'
+        'DECLARATION': '📋',
+        'TEST_INTEGRATION': '🔗',
+        'TEST_DIAGNOSTIC': '🩺'
     };
     return icons[type] || '📄';
 }
@@ -377,6 +701,9 @@ window.chargerOperations = chargerOperations;
 window.exporterDonnees = exporterDonnees;
 window.simulerOperationTest = simulerOperationTest;
 window.viderDonnees = viderDonnees;
+window.testerConnexionKit = testerConnexionKit;
+window.lancerDiagnostic = lancerDiagnostic;
+window.testerEnvoiTracabiliteKit = testerEnvoiTracabiliteKit;
 
 // Nettoyage lors de la fermeture
 window.addEventListener('beforeunload', () => {
