@@ -1,7 +1,7 @@
 // ============================================================================
-// SERVEUR LOCAL COMMISSION UEMOA - server.js
+// SERVEUR LOCAL COMMISSION UEMOA - server.js CORRIGÉ
 // Commission UEMOA - Système Central de Traçabilité
-// Compatible avec les APIs écrites pour Vercel
+// Compatible avec les APIs écrites pour Vercel + Nouveaux Endpoints Spécialisés
 // ============================================================================
 
 const http = require('http');
@@ -32,18 +32,34 @@ const mimeTypes = {
   '.svg': 'image/svg+xml'
 };
 
-// Router pour les APIs COMMISSION UEMOA
+// ✅ ROUTER CORRIGÉ: APIs COMMISSION UEMOA avec nouveaux endpoints spécialisés
 const apiRouter = {
+  // Endpoints de base
   'GET /api/health': () => require('./api/health'),
   'GET /api/statistiques': () => require('./api/statistiques'),
   'GET /api/dashboard': () => require('./api/dashboard'),
+  
+  // Endpoint traçabilité générique (conservé pour compatibilité)
   'GET /api/tracabilite/enregistrer': () => require('./api/tracabilite/enregistrer'),
   'POST /api/tracabilite/enregistrer': () => require('./api/tracabilite/enregistrer'),
+  
+  // ✅ NOUVEAUX: Endpoints spécialisés pour MANIFESTES
+  'GET /api/tracabilite/manifeste': () => require('./api/tracabilite/manifeste'),
+  'POST /api/tracabilite/manifeste': () => require('./api/tracabilite/manifeste'),
+  
+  // ✅ NOUVEAUX: Endpoints spécialisés pour DÉCLARATIONS
+  'GET /api/tracabilite/declaration': () => require('./api/tracabilite/declaration'),
+  'POST /api/tracabilite/declaration': () => require('./api/tracabilite/declaration'),
+  
+  // Autres endpoints existants
   'GET /api/tracabilite/lister': () => require('./api/tracabilite/lister'),
   'GET /api/tracabilite/rechercher': () => require('./api/tracabilite/rechercher'),
   'GET /api/rapports/exporter': () => require('./api/rapports/exporter'),
   'POST /api/rapports/generer': () => require('./api/rapports/generer'),
+  
+  // Endpoints Kit d'Interconnexion
   'GET /api/kit/diagnostic': () => require('./api/kit/diagnostic'),
+  'GET /api/kit/test': () => require('./api/kit/test'), // ✅ AJOUTÉ: Support GET pour les tests
   'POST /api/kit/test': () => require('./api/kit/test'),
   'POST /api/kit/synchroniser': () => require('./api/kit/synchroniser')
 };
@@ -100,18 +116,56 @@ function createVercelRequest(req, body, query) {
   };
 }
 
+// ✅ FONCTION: Vérifier l'existence des fichiers API requis
+function verifierFichiersAPI() {
+  const fichiersRequis = [
+    './api/health.js',
+    './api/statistiques.js',
+    './api/tracabilite/enregistrer.js',
+    './api/tracabilite/manifeste.js',    // ✅ NOUVEAU
+    './api/tracabilite/declaration.js'   // ✅ NOUVEAU
+  ];
+  
+  const fichiersMissing = [];
+  
+  fichiersRequis.forEach(fichier => {
+    if (!fs.existsSync(path.join(__dirname, fichier))) {
+      fichiersMissing.push(fichier);
+    }
+  });
+  
+  if (fichiersMissing.length > 0) {
+    console.log('⚠️  ATTENTION: Fichiers API manquants:');
+    fichiersMissing.forEach(fichier => {
+      console.log(`   ❌ ${fichier}`);
+    });
+    console.log('');
+    console.log('📝 Pour créer les fichiers manquants:');
+    console.log('   1. Créez les dossiers: mkdir -p api/tracabilite');
+    console.log('   2. Créez les fichiers depuis les exemples fournis');
+    console.log('');
+  } else {
+    console.log('✅ Tous les fichiers API requis sont présents');
+  }
+  
+  return fichiersMissing.length === 0;
+}
+
 // Serveur HTTP
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
   const method = req.method;
 
-  console.log(`${method} ${pathname} - [${ORGANISME_CODE}]`);
+  // ✅ AMÉLIORATION: Logging plus détaillé avec timestamp
+  const timestamp = new Date().toLocaleString('fr-FR');
+  console.log(`[${timestamp}] ${method} ${pathname} - [${ORGANISME_CODE}]`);
 
-  // CORS headers
+  // ✅ AMÉLIORATION: CORS headers plus complets
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-System, X-Correlation-ID');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-System, X-Correlation-ID, X-Format, X-Source-Country, X-Test-Type');
+  res.setHeader('Access-Control-Max-Age', '3600');
 
   if (method === 'OPTIONS') {
     res.writeHead(200);
@@ -137,10 +191,16 @@ const server = http.createServer(async (req, res) => {
 
     if (handler && pathname.startsWith('/api/')) {
       try {
+        // ✅ AMÉLIORATION: Vérifier si le fichier API existe avant de l'exécuter
+        const handlerFunction = handler();
+        if (!handlerFunction) {
+          throw new Error(`Handler non trouvé pour ${route}`);
+        }
+        
         // Créer les objets compatibles Vercel
         const vercelRes = createVercelResponse(res);
         
-        // Lire le body pour les requêtes POST
+        // Lire le body pour les requêtes POST/PUT
         let body = {};
         if (method === 'POST' || method === 'PUT') {
           body = await new Promise((resolve, reject) => {
@@ -153,7 +213,8 @@ const server = http.createServer(async (req, res) => {
               try {
                 resolve(data ? JSON.parse(data) : {});
               } catch (error) {
-                console.error('Erreur parsing JSON:', error);
+                console.error('❌ Erreur parsing JSON:', error);
+                console.error('📝 Données reçues:', data.substring(0, 200) + '...');
                 resolve({});
               }
             });
@@ -167,17 +228,30 @@ const server = http.createServer(async (req, res) => {
         
         const vercelReq = createVercelRequest(req, body, parsedUrl.query);
         
+        // ✅ AMÉLIORATION: Logging détaillé pour les API calls
+        if (method === 'POST' && Object.keys(body).length > 0) {
+          console.log(`📨 [API] ${route} - Body:`, {
+            typeOperation: body.typeOperation,
+            numeroOperation: body.numeroOperation,
+            paysOrigine: body.paysOrigine,
+            paysDestination: body.paysDestination
+          });
+        }
+        
         // Exécuter le handler API
-        const apiHandler = handler();
-        await apiHandler(vercelReq, vercelRes);
+        await handlerFunction(vercelReq, vercelRes);
         
       } catch (error) {
-        console.error('❌ Erreur API:', error);
+        console.error(`❌ Erreur API [${route}]:`, error.message);
+        console.error('📋 Stack trace:', error.stack);
+        
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           error: 'Internal Server Error', 
           message: error.message,
-          organisme: ORGANISME_CODE
+          route: route,
+          organisme: ORGANISME_CODE,
+          timestamp: new Date().toISOString()
         }));
       }
       return;
@@ -199,7 +273,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': mimeType });
       fs.createReadStream(filePath).pipe(res);
     } else {
-      // 404
+      // ✅ AMÉLIORATION: Page 404 plus informative
       res.writeHead(404, { 'Content-Type': 'text/html' });
       res.end(`
         <html>
@@ -216,13 +290,28 @@ const server = http.createServer(async (req, res) => {
               h1 { color: #e74c3c; }
               a { color: #3498db; text-decoration: none; }
               .container { background: rgba(255,255,255,0.9); padding: 40px; border-radius: 15px; color: #333; display: inline-block; }
+              .info { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+              .endpoint-list { text-align: left; margin-top: 15px; }
             </style>
           </head>
           <body>
             <div class="container">
               <h1>🏛️ ${ORGANISME_NOM}</h1>
               <h2>404 - Page Non Trouvée</h2>
-              <p>La page ${pathname} n'existe pas sur le système de traçabilité de la ${ORGANISME_NOM}.</p>
+              <p>La page <code>${pathname}</code> n'existe pas sur le système de traçabilité.</p>
+              
+              <div class="info">
+                <h3>📡 Endpoints API Disponibles:</h3>
+                <div class="endpoint-list">
+                  <strong>GET</strong> /api/health<br>
+                  <strong>GET</strong> /api/statistiques<br>
+                  <strong>GET/POST</strong> /api/tracabilite/enregistrer<br>
+                  <strong>GET/POST</strong> /api/tracabilite/manifeste<br>
+                  <strong>GET/POST</strong> /api/tracabilite/declaration<br>
+                  <strong>GET/POST</strong> /api/kit/test<br>
+                </div>
+              </div>
+              
               <p><a href="/">← Retour au Dashboard Central</a></p>
             </div>
           </body>
@@ -236,10 +325,28 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify({ 
       error: 'Internal Server Error', 
       message: error.message,
-      organisme: ORGANISME_CODE
+      organisme: ORGANISME_CODE,
+      timestamp: new Date().toISOString()
     }));
   }
 });
+
+// ✅ FONCTION: Afficher l'état des endpoints au démarrage
+function afficherEtatEndpoints() {
+  console.log('📡 État des endpoints API:');
+  
+  for (const [route, handlerFunc] of Object.entries(apiRouter)) {
+    const [method, path] = route.split(' ');
+    try {
+      const handler = handlerFunc();
+      const status = handler ? '✅' : '❌';
+      console.log(`   ${status} ${method.padEnd(4)} ${path}`);
+    } catch (error) {
+      console.log(`   ❌ ${method.padEnd(4)} ${path} - Erreur: ${error.message}`);
+    }
+  }
+  console.log('');
+}
 
 // Démarrer le serveur
 server.listen(PORT, HOST, () => {
@@ -252,6 +359,8 @@ server.listen(PORT, HOST, () => {
   console.log(`🔍 Health: http://localhost:${PORT}/api/health`);
   console.log(`📈 Statistiques: http://localhost:${PORT}/api/statistiques`);
   console.log(`📊 Traçabilité: http://localhost:${PORT}/api/tracabilite/enregistrer`);
+  console.log(`📦 Manifestes: http://localhost:${PORT}/api/tracabilite/manifeste`);
+  console.log(`📋 Déclarations: http://localhost:${PORT}/api/tracabilite/declaration`);
   console.log(`🔗 Kit URL: https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io`);
   console.log(`⏹️  Arrêt: Ctrl+C`);
   console.log('🏛️ ============================================================');
@@ -260,6 +369,7 @@ server.listen(PORT, HOST, () => {
   console.log('📋 Fonctionnalités disponibles:');
   console.log('   • Collecte centralisée des opérations d\'échange entre pays UEMOA');
   console.log('   • Traçabilité complète des flux de données');
+  console.log('   • Endpoints spécialisés pour manifestes et déclarations'); // ✅ NOUVEAU
   console.log('   • Statistiques en temps réel et monitoring');
   console.log('   • Génération de rapports et export de données');
   console.log('   • Interface web avec graphiques et métriques avancées');
@@ -275,6 +385,19 @@ server.listen(PORT, HOST, () => {
   console.log('   • NER (Niger) - Hinterland');
   console.log('   • SEN (Sénégal) - Côtier');
   console.log('   • TGO (Togo) - Côtier');
+  console.log('');
+  
+  // ✅ NOUVEAUTÉ: Vérifications au démarrage
+  const fichiersOK = verifierFichiersAPI();
+  afficherEtatEndpoints();
+  
+  if (!fichiersOK) {
+    console.log('⚠️  ATTENTION: Certains endpoints ne fonctionneront pas car les fichiers API sont manquants.');
+    console.log('📝 Consultez les instructions ci-dessus pour créer les fichiers requis.');
+    console.log('');
+  }
+  
+  console.log('🚀 Serveur prêt à recevoir les requêtes!');
   console.log('');
 });
 
@@ -295,11 +418,16 @@ process.on('SIGTERM', () => {
   });
 });
 
-// Gestion des erreurs non capturées
+// ✅ AMÉLIORATION: Gestion d'erreurs plus robuste
 process.on('uncaughtException', (error) => {
-  console.error(`❌ [${ORGANISME_CODE}] Erreur non capturée:`, error);
+  console.error(`❌ [${ORGANISME_CODE}] Erreur non capturée:`, error.message);
+  console.error('📋 Stack trace:', error.stack);
+  
+  // Optionnel: arrêter le serveur en cas d'erreur critique
+  // process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error(`❌ [${ORGANISME_CODE}] Promesse rejetée non gérée:`, reason);
+  console.error('📋 Promise:', promise);
 });

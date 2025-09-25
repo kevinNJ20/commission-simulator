@@ -1,6 +1,6 @@
 // Configuration API - COMMISSION UEMOA CORRIGÉ
 const API_BASE = window.location.origin + '/api';
-const KIT_MULESOFT_URL = 'https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io/api/v1';
+const KIT_MULESOFT_URL = 'http://localhost:8080/api/v1';
 window.SYSTEME_TYPE = 'COMMISSION_UEMOA';
 window.ORGANISME_CODE = 'UEMOA';
 
