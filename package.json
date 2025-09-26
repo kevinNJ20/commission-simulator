@@ -1,12 +1,19 @@
 {
   "name": "simulateur-commission-uemoa",
-  "version": "1.0.0",
-  "description": "Simulateur Commission UEMOA - Système Central de Traçabilité",
-  "main": "api/health.js",
+  "version": "1.0.0-UEMOA-FINAL",
+  "description": "Commission UEMOA - Système Central de Traçabilité selon Rapport PDF - ÉTAPES 20-21 (Libre Pratique) + ÉTAPE 16 (Transit)",
+  "main": "server.js",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build required'",
-    "start": "node api/health.js"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "local": "node server.js",
+    "build": "echo 'Commission UEMOA - No build required'",
+    "test": "curl http://localhost:3003/api/health",
+    "test-etape-20": "curl -X POST http://localhost:3003/api/tracabilite/manifeste -H 'Content-Type: application/json' -d '{\"typeOperation\":\"TEST_ETAPE_20_MANIFESTE\",\"paysOrigine\":\"SEN\",\"paysDestination\":\"MLI\"}'",
+    "test-etape-21": "curl -X POST http://localhost:3003/api/tracabilite/declaration -H 'Content-Type: application/json' -d '{\"typeOperation\":\"TEST_ETAPE_21_FINALISATION\",\"paysOrigine\":\"MLI\",\"paysDestination\":\"SEN\"}'",
+    "test-etape-16": "curl -X POST http://localhost:3003/api/tracabilite/enregistrer -H 'Content-Type: application/json' -d '{\"typeOperation\":\"TEST_ETAPE_16_TRANSIT\",\"paysOrigine\":\"SEN\",\"paysDestination\":\"MLI\"}'",
+    "test-kit": "curl http://localhost:3003/api/kit/test?type=health",
+    "test-all-etapes": "npm run test-etape-20 && npm run test-etape-21 && npm run test-etape-16"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -14,8 +21,60 @@
     "uuid": "^9.0.1"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
-  "keywords": ["commission", "uemoa", "tracabilite", "mulesoft", "central"],
-  "author": "Commission UEMOA - Ouagadougou"
+  "keywords": [
+    "commission", 
+    "uemoa", 
+    "tracabilite", 
+    "supervision", 
+    "centrale",
+    "etapes-20-21",
+    "etape-16",
+    "libre-pratique",
+    "transit",
+    "ouagadougou",
+    "burkina-faso",
+    "senegal",
+    "mali",
+    "pays-cotiers",
+    "pays-hinterland"
+  ],
+  "author": "Commission UEMOA - Ouagadougou, Burkina Faso",
+  "license": "OPEN",
+  "repository": {
+    "type": "git",
+    "url": "commission-uemoa-supervision-centrale"
+  },
+  "homepage": "https://commission-uemoa.vercel.app",
+  "config": {
+    "commission": {
+      "nom": "Commission de l'Union Économique et Monétaire Ouest Africaine",
+      "sigle": "UEMOA",
+      "siege": "Ouagadougou, Burkina Faso",
+      "role": "SUPERVISION_CENTRALE_TRACABILITE",
+      "workflows": {
+        "libre_pratique": {
+          "etapes_totales": 21,
+          "etapes_commission": "20-21",
+          "etape_20": "Notification manifeste depuis Kit MuleSoft",
+          "etape_21": "Traçabilité finale workflow libre pratique"
+        },
+        "transit": {
+          "etapes_totales": 16,
+          "etapes_commission": "16",
+          "etape_16": "Traçabilité finale transit"
+        }
+      },
+      "pays_surveilles": {
+        "cotiers": ["SEN", "CIV", "BEN", "TGO", "GNB"],
+        "hinterland": ["MLI", "BFA", "NER"],
+        "total": 8
+      },
+      "kit_mulesoft": {
+        "url": "https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io",
+        "role": "Réception notifications étapes Commission"
+      }
+    }
+  }
 }

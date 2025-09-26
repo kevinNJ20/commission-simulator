@@ -1,7 +1,8 @@
 // ============================================================================
-// SERVEUR LOCAL COMMISSION UEMOA - server.js CORRIGÉ
+// SERVEUR LOCAL COMMISSION UEMOA - server.js CORRIGÉ FINAL
 // Commission UEMOA - Système Central de Traçabilité
-// Compatible avec les APIs écrites pour Vercel + Nouveaux Endpoints Spécialisés
+// ÉTAPES 20-21 (Libre Pratique) + ÉTAPE 16 (Transit)
+// Siège: Ouagadougou, Burkina Faso
 // ============================================================================
 
 const http = require('http');
@@ -9,15 +10,17 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-// Configuration du serveur - COMMISSION UEMOA
+// ✅ Configuration Commission UEMOA selon rapport PDF
 const PORT = process.env.PORT || 3003;
 const HOST = '0.0.0.0';
 const ORGANISME_CODE = 'UEMOA';
 const ORGANISME_NOM = 'Commission UEMOA';
-const ORGANISME_TYPE = 'COMMISSION_CENTRALE';
+const ORGANISME_TYPE = 'SUPERVISION_CENTRALE_TRACABILITE';
 const SIEGE = 'Ouagadougou, Burkina Faso';
+const ROLE_COMMISSION = 'ÉTAPES_20_21_LIBRE_PRATIQUE_ETAPE_16_TRANSIT';
 
-console.log(`🏛️ Démarrage serveur ${ORGANISME_NOM}...`);
+console.log(`🏛️ Démarrage ${ORGANISME_NOM} - ${SIEGE}...`);
+console.log(`🔍 Rôle: ${ROLE_COMMISSION}`);
 
 // Types MIME
 const mimeTypes = {
@@ -32,34 +35,34 @@ const mimeTypes = {
   '.svg': 'image/svg+xml'
 };
 
-// ✅ ROUTER CORRIGÉ: APIs COMMISSION UEMOA avec nouveaux endpoints spécialisés
+// ✅ ROUTER API COMMISSION UEMOA - Endpoints spécialisés selon rapport PDF
 const apiRouter = {
-  // Endpoints de base
+  // ✅ Endpoints de base Commission
   'GET /api/health': () => require('./api/health'),
   'GET /api/statistiques': () => require('./api/statistiques'),
   'GET /api/dashboard': () => require('./api/dashboard'),
   
-  // Endpoint traçabilité générique (conservé pour compatibilité)
+  // ✅ ÉTAPES 20-21 et 16: Endpoint traçabilité centrale (principal)
   'GET /api/tracabilite/enregistrer': () => require('./api/tracabilite/enregistrer'),
   'POST /api/tracabilite/enregistrer': () => require('./api/tracabilite/enregistrer'),
   
-  // ✅ NOUVEAUX: Endpoints spécialisés pour MANIFESTES
+  // ✅ ÉTAPE 20: Endpoints spécialisés MANIFESTES (notifications)
   'GET /api/tracabilite/manifeste': () => require('./api/tracabilite/manifeste'),
   'POST /api/tracabilite/manifeste': () => require('./api/tracabilite/manifeste'),
   
-  // ✅ NOUVEAUX: Endpoints spécialisés pour DÉCLARATIONS
+  // ✅ ÉTAPE 21: Endpoints spécialisés DÉCLARATIONS (finalisations)
   'GET /api/tracabilite/declaration': () => require('./api/tracabilite/declaration'),
   'POST /api/tracabilite/declaration': () => require('./api/tracabilite/declaration'),
   
-  // Autres endpoints existants
+  // ✅ Autres endpoints Commission existants
   'GET /api/tracabilite/lister': () => require('./api/tracabilite/lister'),
   'GET /api/tracabilite/rechercher': () => require('./api/tracabilite/rechercher'),
   'GET /api/rapports/exporter': () => require('./api/rapports/exporter'),
   'POST /api/rapports/generer': () => require('./api/rapports/generer'),
   
-  // Endpoints Kit d'Interconnexion
+  // ✅ Endpoints Kit d'Interconnexion (Communication avec Kit MuleSoft)
   'GET /api/kit/diagnostic': () => require('./api/kit/diagnostic'),
-  'GET /api/kit/test': () => require('./api/kit/test'), // ✅ AJOUTÉ: Support GET pour les tests
+  'GET /api/kit/test': () => require('./api/kit/test'),
   'POST /api/kit/test': () => require('./api/kit/test'),
   'POST /api/kit/synchroniser': () => require('./api/kit/synchroniser')
 };
@@ -116,14 +119,17 @@ function createVercelRequest(req, body, query) {
   };
 }
 
-// ✅ FONCTION: Vérifier l'existence des fichiers API requis
-function verifierFichiersAPI() {
+// ✅ FONCTION: Vérifier fichiers API Commission requis selon rapport PDF
+function verifierFichiersAPICommission() {
   const fichiersRequis = [
-    './api/health.js',
-    './api/statistiques.js',
-    './api/tracabilite/enregistrer.js',
-    './api/tracabilite/manifeste.js',    // ✅ NOUVEAU
-    './api/tracabilite/declaration.js'   // ✅ NOUVEAU
+    './api/health.js',                        // Health check Commission
+    './api/statistiques.js',                  // Stats supervision
+    './api/tracabilite/enregistrer.js',       // ÉTAPES 20-21 et 16 (principal)
+    './api/tracabilite/manifeste.js',         // ÉTAPE 20 spécialisé
+    './api/tracabilite/declaration.js',       // ÉTAPE 21 spécialisé
+    './lib/database.js',                      // Base traçabilité Commission
+    './lib/analytics.js',                     // Analytics supervision
+    './lib/kit-client.js'                     // Communication Kit MuleSoft
   ];
   
   const fichiersMissing = [];
@@ -135,37 +141,41 @@ function verifierFichiersAPI() {
   });
   
   if (fichiersMissing.length > 0) {
-    console.log('⚠️  ATTENTION: Fichiers API manquants:');
+    console.log('⚠️  ATTENTION Commission UEMOA: Fichiers API manquants:');
     fichiersMissing.forEach(fichier => {
       console.log(`   ❌ ${fichier}`);
     });
     console.log('');
-    console.log('📝 Pour créer les fichiers manquants:');
-    console.log('   1. Créez les dossiers: mkdir -p api/tracabilite');
-    console.log('   2. Créez les fichiers depuis les exemples fournis');
+    console.log('📝 Rôle Commission selon rapport PDF:');
+    console.log('   • ÉTAPE 20: Notification manifeste libre pratique');
+    console.log('   • ÉTAPE 21: Traçabilité finale libre pratique');
+    console.log('   • ÉTAPE 16: Traçabilité finale transit');
+    console.log('   • Supervision centralisée échanges UEMOA');
     console.log('');
   } else {
-    console.log('✅ Tous les fichiers API requis sont présents');
+    console.log('✅ Tous les fichiers API Commission UEMOA sont présents');
   }
   
   return fichiersMissing.length === 0;
 }
 
-// Serveur HTTP
+// ✅ Serveur HTTP Commission UEMOA
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
   const method = req.method;
 
-  // ✅ AMÉLIORATION: Logging plus détaillé avec timestamp
+  // ✅ Logging spécialisé Commission UEMOA
   const timestamp = new Date().toLocaleString('fr-FR');
-  console.log(`[${timestamp}] ${method} ${pathname} - [${ORGANISME_CODE}]`);
+  console.log(`[${timestamp}] ${method} ${pathname} - [Commission UEMOA - Supervision Centrale]`);
 
-  // ✅ AMÉLIORATION: CORS headers plus complets
+  // ✅ CORS headers Commission UEMOA
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-System, X-Correlation-ID, X-Format, X-Source-Country, X-Test-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-System, X-Correlation-ID, X-Format, X-Source-Country, X-Test-Type, X-Commission-Role, X-Workflow-Step, X-Kit-Source');
   res.setHeader('Access-Control-Max-Age', '3600');
+  res.setHeader('X-Commission-UEMOA', 'Supervision-Centrale-Ouagadougou');
+  res.setHeader('X-Workflow-Support', 'ETAPES_20_21_LIBRE_PRATIQUE_ETAPE_16_TRANSIT');
 
   if (method === 'OPTIONS') {
     res.writeHead(200);
@@ -174,11 +184,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    // Router API
+    // ✅ Router API Commission avec gestion spécialisée
     const route = `${method} ${pathname}`;
     let handler = apiRouter[route];
     
-    // Si pas de route exacte, essayer de trouver une route partielle
+    // Si pas de route exacte, chercher route partielle
     if (!handler) {
       for (const [routePattern, routeHandler] of Object.entries(apiRouter)) {
         const [routeMethod, routePath] = routePattern.split(' ');
@@ -191,10 +201,9 @@ const server = http.createServer(async (req, res) => {
 
     if (handler && pathname.startsWith('/api/')) {
       try {
-        // ✅ AMÉLIORATION: Vérifier si le fichier API existe avant de l'exécuter
         const handlerFunction = handler();
         if (!handlerFunction) {
-          throw new Error(`Handler non trouvé pour ${route}`);
+          throw new Error(`Handler Commission non trouvé pour ${route}`);
         }
         
         // Créer les objets compatibles Vercel
@@ -213,51 +222,53 @@ const server = http.createServer(async (req, res) => {
               try {
                 resolve(data ? JSON.parse(data) : {});
               } catch (error) {
-                console.error('❌ Erreur parsing JSON:', error);
+                console.error('❌ [Commission] Erreur parsing JSON:', error);
                 console.error('📝 Données reçues:', data.substring(0, 200) + '...');
                 resolve({});
               }
             });
             
             req.on('error', reject);
-            
-            // Timeout après 10 secondes
-            setTimeout(() => resolve({}), 10000);
+            setTimeout(() => resolve({}), 10000); // Timeout 10s
           });
         }
         
         const vercelReq = createVercelRequest(req, body, parsedUrl.query);
         
-        // ✅ AMÉLIORATION: Logging détaillé pour les API calls
+        // ✅ Logging détaillé Commission pour les opérations de traçabilité
         if (method === 'POST' && Object.keys(body).length > 0) {
-          console.log(`📨 [API] ${route} - Body:`, {
+          console.log(`📊 [Commission UEMOA] ${route} - Traçabilité:`, {
             typeOperation: body.typeOperation,
             numeroOperation: body.numeroOperation,
-            paysOrigine: body.paysOrigine,
-            paysDestination: body.paysDestination
+            corridor: `${body.paysOrigine} → ${body.paysDestination}`,
+            etapeWorkflow: determinerEtapeWorkflowCommission(body.typeOperation)
           });
         }
         
-        // Exécuter le handler API
+        // Exécuter le handler API Commission
         await handlerFunction(vercelReq, vercelRes);
         
       } catch (error) {
-        console.error(`❌ Erreur API [${route}]:`, error.message);
-        console.error('📋 Stack trace:', error.stack);
+        console.error(`❌ [Commission UEMOA] Erreur API [${route}]:`, error.message);
+        console.error('📋 Stack trace Commission:', error.stack);
         
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
-          error: 'Internal Server Error', 
+          error: 'Commission UEMOA Internal Server Error', 
           message: error.message,
           route: route,
-          organisme: ORGANISME_CODE,
+          commission: {
+            nom: ORGANISME_NOM,
+            siege: SIEGE,
+            role: ROLE_COMMISSION
+          },
           timestamp: new Date().toISOString()
         }));
       }
       return;
     }
 
-    // Servir les fichiers statiques
+    // ✅ Servir les fichiers statiques Commission
     let filePath;
     if (pathname === '/') {
       filePath = path.join(__dirname, 'public', 'index.html');
@@ -273,7 +284,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': mimeType });
       fs.createReadStream(filePath).pipe(res);
     } else {
-      // ✅ AMÉLIORATION: Page 404 plus informative
+      // ✅ Page 404 spécialisée Commission UEMOA
       res.writeHead(404, { 'Content-Type': 'text/html' });
       res.end(`
         <html>
@@ -287,32 +298,61 @@ const server = http.createServer(async (req, res) => {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
               }
-              h1 { color: #e74c3c; }
+              h1 { color: #ff9500; }
               a { color: #3498db; text-decoration: none; }
-              .container { background: rgba(255,255,255,0.9); padding: 40px; border-radius: 15px; color: #333; display: inline-block; }
-              .info { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
-              .endpoint-list { text-align: left; margin-top: 15px; }
+              .container { 
+                background: rgba(255,255,255,0.95); 
+                padding: 40px; 
+                border-radius: 15px; 
+                color: #333; 
+                display: inline-block;
+                border-left: 5px solid #ff9500;
+              }
+              .info { 
+                margin-top: 20px; 
+                padding: 15px; 
+                background: #f8f9fa; 
+                border-radius: 8px; 
+                border-left: 3px solid #ff9500;
+              }
+              .endpoint-list { text-align: left; margin-top: 15px; font-size: 0.9em; }
+              .workflow-info {
+                background: rgba(255, 149, 0, 0.1);
+                padding: 15px;
+                border-radius: 8px;
+                margin: 15px 0;
+                border-left: 3px solid #ff9500;
+              }
             </style>
           </head>
           <body>
             <div class="container">
               <h1>🏛️ ${ORGANISME_NOM}</h1>
               <h2>404 - Page Non Trouvée</h2>
-              <p>La page <code>${pathname}</code> n'existe pas sur le système de traçabilité.</p>
+              <p>La page <code>${pathname}</code> n'existe pas sur le système central de traçabilité.</p>
+              
+              <div class="workflow-info">
+                <h3>🔍 Rôle Commission UEMOA selon Rapport PDF</h3>
+                <p><strong>ÉTAPE 20:</strong> Notification manifeste libre pratique</p>
+                <p><strong>ÉTAPE 21:</strong> Traçabilité finale libre pratique (21 étapes)</p>
+                <p><strong>ÉTAPE 16:</strong> Traçabilité finale transit (16 étapes)</p>
+                <p><strong>Siège:</strong> ${SIEGE}</p>
+              </div>
               
               <div class="info">
-                <h3>📡 Endpoints API Disponibles:</h3>
+                <h3>📡 Endpoints API Commission Disponibles:</h3>
                 <div class="endpoint-list">
-                  <strong>GET</strong> /api/health<br>
-                  <strong>GET</strong> /api/statistiques<br>
-                  <strong>GET/POST</strong> /api/tracabilite/enregistrer<br>
-                  <strong>GET/POST</strong> /api/tracabilite/manifeste<br>
-                  <strong>GET/POST</strong> /api/tracabilite/declaration<br>
-                  <strong>GET/POST</strong> /api/kit/test<br>
+                  <strong>GET</strong> /api/health - Health check Commission<br>
+                  <strong>GET</strong> /api/statistiques - Stats supervision<br>
+                  <strong>GET/POST</strong> /api/tracabilite/enregistrer - ÉTAPES 20-21 et 16<br>
+                  <strong>GET/POST</strong> /api/tracabilite/manifeste - ÉTAPE 20 spécialisé<br>
+                  <strong>GET/POST</strong> /api/tracabilite/declaration - ÉTAPE 21 spécialisé<br>
+                  <strong>GET/POST</strong> /api/kit/test - Tests Kit MuleSoft<br>
+                  <strong>GET</strong> /api/rapports/exporter - Export données Commission<br>
                 </div>
               </div>
               
-              <p><a href="/">← Retour au Dashboard Central</a></p>
+              <p><a href="/">← Retour au Dashboard Commission UEMOA</a></p>
             </div>
           </body>
         </html>
@@ -320,27 +360,59 @@ const server = http.createServer(async (req, res) => {
     }
 
   } catch (error) {
-    console.error('❌ Erreur serveur:', error);
+    console.error('❌ [Commission UEMOA] Erreur serveur:', error);
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
-      error: 'Internal Server Error', 
+      error: 'Commission UEMOA Internal Server Error', 
       message: error.message,
-      organisme: ORGANISME_CODE,
+      commission: {
+        nom: ORGANISME_NOM,
+        siege: SIEGE,
+        role: ROLE_COMMISSION
+      },
       timestamp: new Date().toISOString()
     }));
   }
 });
 
-// ✅ FONCTION: Afficher l'état des endpoints au démarrage
-function afficherEtatEndpoints() {
-  console.log('📡 État des endpoints API:');
+// ✅ Fonction utilitaire Commission: Déterminer étape workflow
+function determinerEtapeWorkflowCommission(typeOperation) {
+  if (!typeOperation) return 'N/A';
+  
+  // Selon rapport PDF Figure 19 et 20
+  if (typeOperation.includes('MANIFESTE') || typeOperation.includes('TRANSMISSION')) {
+    return '20'; // Notification manifeste
+  }
+  
+  if (typeOperation.includes('COMPLETION') || typeOperation.includes('DECLARATION')) {
+    return '21'; // Finalisation libre pratique
+  }
+  
+  if (typeOperation.includes('TRANSIT')) {
+    return '16'; // Traçabilité transit
+  }
+  
+  return '20-21'; // Traçabilité générale Commission
+}
+
+// ✅ Afficher état endpoints Commission au démarrage
+function afficherEtatEndpointsCommission() {
+  console.log('📡 État des endpoints API Commission UEMOA:');
   
   for (const [route, handlerFunc] of Object.entries(apiRouter)) {
     const [method, path] = route.split(' ');
     try {
       const handler = handlerFunc();
       const status = handler ? '✅' : '❌';
-      console.log(`   ${status} ${method.padEnd(4)} ${path}`);
+      
+      // Indiquer le rôle selon rapport PDF
+      let roleInfo = '';
+      if (path.includes('manifeste')) roleInfo = ' (ÉTAPE 20)';
+      else if (path.includes('declaration')) roleInfo = ' (ÉTAPE 21)';
+      else if (path.includes('enregistrer')) roleInfo = ' (ÉTAPES 20-21 et 16)';
+      else if (path.includes('kit')) roleInfo = ' (Kit MuleSoft)';
+      
+      console.log(`   ${status} ${method.padEnd(4)} ${path}${roleInfo}`);
     } catch (error) {
       console.log(`   ❌ ${method.padEnd(4)} ${path} - Erreur: ${error.message}`);
     }
@@ -348,86 +420,96 @@ function afficherEtatEndpoints() {
   console.log('');
 }
 
-// Démarrer le serveur
+// ✅ Démarrer le serveur Commission UEMOA
 server.listen(PORT, HOST, () => {
   console.log('');
   console.log('🏛️ ============================================================');
-  console.log(`🏛️ Serveur ${ORGANISME_NOM} démarré`);
+  console.log(`🏛️ ${ORGANISME_NOM} - Système Central de Traçabilité DÉMARRÉ`);
   console.log(`📍 Siège: ${SIEGE}`);
+  console.log(`🔍 Rôle: ${ROLE_COMMISSION}`);
   console.log(`🌍 URL: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}`);
-  console.log(`🔍 Health: http://localhost:${PORT}/api/health`);
-  console.log(`📈 Statistiques: http://localhost:${PORT}/api/statistiques`);
-  console.log(`📊 Traçabilité: http://localhost:${PORT}/api/tracabilite/enregistrer`);
-  console.log(`📦 Manifestes: http://localhost:${PORT}/api/tracabilite/manifeste`);
-  console.log(`📋 Déclarations: http://localhost:${PORT}/api/tracabilite/declaration`);
-  console.log(`🔗 Kit URL: https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io`);
+  console.log(`📊 Dashboard Commission: http://localhost:${PORT}`);
+  console.log(`🏥 Health Commission: http://localhost:${PORT}/api/health`);
+  console.log(`📈 Stats Supervision: http://localhost:${PORT}/api/statistiques`);
+  console.log(`📊 Traçabilité Centrale: http://localhost:${PORT}/api/tracabilite/enregistrer`);
+  console.log(`📦 ÉTAPE 20 (Manifeste): http://localhost:${PORT}/api/tracabilite/manifeste`);
+  console.log(`📋 ÉTAPE 21 (Déclaration): http://localhost:${PORT}/api/tracabilite/declaration`);
+  console.log(`🔗 Kit MuleSoft: https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io`);
   console.log(`⏹️  Arrêt: Ctrl+C`);
   console.log('🏛️ ============================================================');
   console.log('');
-  console.log(`🏛️ ${ORGANISME_NOM} - Système Central de Traçabilité`);
-  console.log('📋 Fonctionnalités disponibles:');
-  console.log('   • Collecte centralisée des opérations d\'échange entre pays UEMOA');
-  console.log('   • Traçabilité complète des flux de données');
-  console.log('   • Endpoints spécialisés pour manifestes et déclarations'); // ✅ NOUVEAU
-  console.log('   • Statistiques en temps réel et monitoring');
-  console.log('   • Génération de rapports et export de données');
-  console.log('   • Interface web avec graphiques et métriques avancées');
-  console.log('   • Tests et diagnostic Kit d\'Interconnexion');
+  console.log(`🏛️ ${ORGANISME_NOM} - Supervision Centralisée selon Rapport PDF`);
+  console.log('');
+  console.log('📋 Workflows Commission UEMOA supportés:');
+  console.log('   🔄 LIBRE PRATIQUE (21 étapes):');
+  console.log('      • ÉTAPE 20: Notification manifeste depuis Kit MuleSoft');
+  console.log('      • ÉTAPE 21: Traçabilité finale workflow libre pratique');
+  console.log('   🔄 TRANSIT (16 étapes):');
+  console.log('      • ÉTAPE 16: Traçabilité finale transit');
+  console.log('');
+  console.log('🌍 États membres UEMOA surveillés:');
+  console.log('   🏖️  Pays Côtiers (Prime abord):');
+  console.log('      • 🇸🇳 SEN (Sénégal) - Port de Dakar');
+  console.log('      • 🇨🇮 CIV (Côte d\'Ivoire) - Port d\'Abidjan');
+  console.log('      • 🇧🇯 BEN (Bénin) - Port de Cotonou');
+  console.log('      • 🇹🇬 TGO (Togo) - Port de Lomé');
+  console.log('      • 🇬🇼 GNB (Guinée-Bissau) - Port de Bissau');
+  console.log('   🏔️  Pays Hinterland (Destination):');
+  console.log('      • 🇲🇱 MLI (Mali) - Bamako');
+  console.log('      • 🇧🇫 BFA (Burkina Faso) - Ouagadougou');
+  console.log('      • 🇳🇪 NER (Niger) - Niamey');
+  console.log('');
+  console.log('📊 Fonctionnalités Commission UEMOA:');
+  console.log('   • Traçabilité centralisée ÉTAPES 20-21 et 16');
+  console.log('   • Supervision échanges entre pays membres');
+  console.log('   • Interface web spécialisée Commission');
+  console.log('   • Analytics et métriques supervision avancées');
+  console.log('   • Communication avec Kit MuleSoft d\'Interconnexion');
+  console.log('   • Génération de rapports supervision');
+  console.log('   • Export de données Commission pour analyses');
   console.log(`   • Code organisme: ${ORGANISME_CODE} | Type: ${ORGANISME_TYPE}`);
   console.log('');
-  console.log('🌍 Pays membres UEMOA surveillés:');
-  console.log('   • BFA (Burkina Faso) - Hinterland');
-  console.log('   • BEN (Bénin) - Côtier');
-  console.log('   • CIV (Côte d\'Ivoire) - Côtier');
-  console.log('   • GNB (Guinée-Bissau) - Côtier');
-  console.log('   • MLI (Mali) - Hinterland');
-  console.log('   • NER (Niger) - Hinterland');
-  console.log('   • SEN (Sénégal) - Côtier');
-  console.log('   • TGO (Togo) - Côtier');
-  console.log('');
   
-  // ✅ NOUVEAUTÉ: Vérifications au démarrage
-  const fichiersOK = verifierFichiersAPI();
-  afficherEtatEndpoints();
+  // ✅ Vérifications spécifiques Commission au démarrage
+  const fichiersOK = verifierFichiersAPICommission();
+  afficherEtatEndpointsCommission();
   
   if (!fichiersOK) {
-    console.log('⚠️  ATTENTION: Certains endpoints ne fonctionneront pas car les fichiers API sont manquants.');
-    console.log('📝 Consultez les instructions ci-dessus pour créer les fichiers requis.');
+    console.log('⚠️  ATTENTION Commission UEMOA: Certains endpoints ne fonctionneront pas.');
+    console.log('📝 Consultez les instructions ci-dessus pour les fichiers manquants.');
     console.log('');
   }
   
-  console.log('🚀 Serveur prêt à recevoir les requêtes!');
+  console.log('🚀 Commission UEMOA prête pour supervision centralisée !');
+  console.log('🔄 En attente de notifications depuis Kit MuleSoft...');
   console.log('');
 });
 
-// Gestion propre de l'arrêt
+// ✅ Gestion propre de l'arrêt Commission
 process.on('SIGINT', () => {
-  console.log(`\n🛑 Arrêt du serveur ${ORGANISME_NOM}...`);
+  console.log(`\n🛑 Arrêt ${ORGANISME_NOM} - ${SIEGE}...`);
   server.close(() => {
-    console.log('✅ Serveur arrêté proprement');
+    console.log('✅ Commission UEMOA arrêtée proprement');
+    console.log('📊 Supervision centralisée terminée');
     process.exit(0);
   });
 });
 
 process.on('SIGTERM', () => {
-  console.log(`\n🛑 Arrêt du serveur ${ORGANISME_NOM}...`);
+  console.log(`\n🛑 Arrêt ${ORGANISME_NOM} - ${SIEGE}...`);
   server.close(() => {
-    console.log('✅ Serveur arrêté proprement');
+    console.log('✅ Commission UEMOA arrêtée proprement');
     process.exit(0);
   });
 });
 
-// ✅ AMÉLIORATION: Gestion d'erreurs plus robuste
+// ✅ Gestion d'erreurs robuste Commission
 process.on('uncaughtException', (error) => {
-  console.error(`❌ [${ORGANISME_CODE}] Erreur non capturée:`, error.message);
-  console.error('📋 Stack trace:', error.stack);
-  
-  // Optionnel: arrêter le serveur en cas d'erreur critique
-  // process.exit(1);
+  console.error(`❌ [Commission UEMOA] Erreur non capturée:`, error.message);
+  console.error('📋 Stack trace Commission:', error.stack);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error(`❌ [${ORGANISME_CODE}] Promesse rejetée non gérée:`, reason);
-  console.error('📋 Promise:', promise);
+  console.error(`❌ [Commission UEMOA] Promesse rejetée non gérée:`, reason);
+  console.error('📋 Promise Commission:', promise);
 });
