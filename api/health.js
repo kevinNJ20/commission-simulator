@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
       try {
         console.log('🔍 [Commission] Test connectivité vers Kit MuleSoft...');
         kitStatus = await Promise.race([
-          kitClient.verifierSante(),
+          kitClient.verifierSanteKit(),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout Kit MuleSoft > 5s')), 5000)
           )
@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
       }
 
       // Obtenir statistiques de traçabilité Commission
-      const stats = database.obtenirStatistiques();
+      const stats = database.obtenirStatistiquesGlobales();
       const operationsRecentes = database.obtenirOperations(5);
 
       const healthStatus = {

@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
       
       switch (type) {
         case 'health':
-          resultat = await kitClient.verifierSante();
+          resultat = await kitClient.verifierSanteKit();
           break;
         case 'diagnostic':
           resultat = await kitClient.executerDiagnostic();
