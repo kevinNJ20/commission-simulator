@@ -10,17 +10,30 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>🏛️ Commission UEMOA</h1>
-            <p><strong>Supervision Centrale</strong> - Traçabilité des Workflows d'Interconnexion</p>
-            <div class="commission-info">
-                <div class="commission-detail">📍 <strong>Siège:</strong> Ouagadougou, Burkina Faso</div>
-                <div class="commission-detail">🔍 <strong>Rôle:</strong> ÉTAPES 20-21 (Libre Pratique) + ÉTAPE 16 (Transit)</div>
-                <div class="commission-detail">🌍 <strong>Pays Surveillés:</strong> 8 États membres UEMOA</div>
+            <!-- Section UEMOA avec tous les drapeaux des pays membres -->
+            <div class="uemoa-header">
+                <div class="flags-grid">
+                    <img src="images/flags/benin.png" alt="Bénin" class="country-flag" title="Bénin">
+                    <img src="images/flags/cote-ivoire.png" alt="Côte d'Ivoire" class="country-flag" title="Côte d'Ivoire">
+                    <img src="images/flags/guinee-bissau.png" alt="Guinée-Bissau" class="country-flag" title="Guinée-Bissau">
+                    <img src="images/flags/senegal.png" alt="Sénégal" class="country-flag" title="Sénégal">
+                    <img src="images/flags/togo.png" alt="Togo" class="country-flag" title="Togo">
+                </div>
+                
+                <img src="images/uemoa-logo.png" alt="Logo UEMOA" class="uemoa-logo">
+                <span class="uemoa-text">🏛️ Commission UEMOA</span>
+                <div class="flags-grid">
+                    <img src="images/flags/burkina-faso.png" alt="Burkina Faso" class="country-flag" title="Burkina Faso">
+                    <img src="images/flags/mali.png" alt="Mali" class="country-flag active" title="Mali (Pays actuel)">
+                    <img src="images/flags/niger.png" alt="Niger" class="country-flag" title="Niger">
+                </div>
+                
+                
             </div>
-            <div class="status" id="status">
-                <span class="status-indicator" id="status-indicator">🔴</span>
-                <span id="status-text">Vérification système...</span>
-            </div>
+            
+            <h1>Système Douanier Mali (Pays B)</h1>
+            <p>🏛️ Bamako - Pays de Destination - Workflow Manuel</p>
+            <div class="workflow-badge">ÉTAPES 6-16 : Traitement Manuel</div>
         </header>
 
         <main class="main">
@@ -51,7 +64,7 @@
                 </div>
                 <div class="controls-row">
                     <button class="btn btn-primary" onclick="chargerStatistiques()">🔄 Actualiser</button>
-                    <button class="btn btn-accent" onclick="testerConnectiviteKit()">🔧 Test Kit Interconnexion</button>
+                    <button class="btn btn-accent" onclick="testerConnectiviteKit()">🔧 Test Kit d'Interconnexion</button>
                     <button class="btn btn-secondary" onclick="genererRapportSupervision()">📊 Rapport Supervision</button>
                 </div>
             </section>
@@ -148,7 +161,7 @@
                         <button class="btn btn-accent" onclick="simulerManifeste()">🧪 Test Étape 20</button>
                     </div>
                     <div class="step-info">
-                        <strong>ÉTAPE 20:</strong> Notification manifeste depuis Kit MuleSoft → Commission UEMOA
+                        <strong>ÉTAPE 20:</strong> Notification manifeste depuis Kit d'Interconnexion → Commission UEMOA
                     </div>
                     <div id="manifestes-list">
                         <p class="loading">Chargement manifestes tracés...</p>
@@ -198,10 +211,10 @@
             <!-- ✅ Tests Kit d'Interconnexion -->
             <section class="card full-width">
                 <h2>🔧 Tests Kit d'Interconnexion UEMOA</h2>
-                <p>Testez la connectivité avec le Kit MuleSoft d'Interconnexion hébergé dans chaque pays membre.</p>
+                <p>Testez la connectivité avec le Kit d'Interconnexion hébergé dans chaque pays membre.</p>
                 <div class="test-controls">
                     <button class="btn btn-primary" onclick="testerConnectiviteKit()">
-                        🔗 Test Kit MuleSoft
+                        🔗 Test Kit d'Interconnexion
                     </button>
                     <button class="btn btn-secondary" onclick="lancerDiagnosticKit()">
                         🩺 Diagnostic Complet
@@ -397,7 +410,7 @@
                     text.textContent = 'Commission opérationnelle';
                     document.getElementById('status').style.background = '#d4edda';
                     
-                    // Mettre à jour les infos Commission dans le health check
+                    // Mettre à jour les infos Commission
                     if (data.commission) {
                         console.log('🏛️ Commission UEMOA:', data.commission.nom);
                         console.log('📍 Siège:', data.commission.siege);
@@ -618,7 +631,7 @@
 
         // ✅ Tests Kit d'Interconnexion
         async function testerConnectiviteKit() {
-            ajouterLogSupervision('TEST_KIT', 'Test connectivité Kit', 'Vérification Kit MuleSoft...');
+            ajouterLogSupervision('TEST_KIT', 'Test connectivité Kit', 'Vérification Kit d\'Interconnexion...');
             afficherNotification('🔧 Test connectivité Kit d\'Interconnexion...', 'info');
             
             try {
@@ -640,7 +653,7 @@
                             <h4>✅ Test Connectivité Kit Réussi</h4>
                             <p><strong>Status:</strong> ${data.resultat?.status || 'UP'}</p>
                             <p><strong>Latence:</strong> ${data.resultat?.latence || 'N/A'} ms</p>
-                            <p><strong>Source:</strong> Commission → Kit MuleSoft</p>
+                            <p><strong>Source:</strong> Commission → Kit d'Interconnexion</p>
                             <small>Testé le ${new Date().toLocaleString('fr-FR')}</small>
                         </div>
                     `;
@@ -655,7 +668,7 @@
                     <div class="test-result error">
                         <h4>❌ Test Connectivité Kit Échoué</h4>
                         <p><strong>Erreur:</strong> ${error.message}</p>
-                        <p>Le Kit MuleSoft d'Interconnexion n'est pas accessible.</p>
+                        <p>Le Kit d'Interconnexion n'est pas accessible.</p>
                         <small>Testé le ${new Date().toLocaleString('fr-FR')}</small>
                     </div>
                 `;
