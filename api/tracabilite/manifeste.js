@@ -88,14 +88,17 @@ module.exports = async (req, res) => {
     } else if (req.method === 'GET') {
       // Lister les manifestes uniquement
       const limite = parseInt(req.query.limite) || 50;
-      const manifestes = database.obtenirOperations(limite, { 
-        typeOperation: [
-          'TRANSMISSION_MANIFESTE', 
-          'TRANSMISSION_MANIFESTE_UEMOA',
-          'TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE',  // ✅ Envoyé par Kit MuleSoft
-          'TEST_TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE'  // ✅ Tests
-        ] 
-      });
+
+      // ✅ CORRECTION: Récupérer toutes les opérations puis filtrer côté JavaScript
+      const toutesOperations = database.obtenirOperations(limite * 3); // Plus large pour filtrer après
+
+      // Filtrer les manifestes avec une logique inclusive
+      const manifestes = toutesOperations.filter(op => {
+        const type = op.typeOperation || '';
+        return type.includes('MANIFESTE') || 
+               type.includes('TRANSMISSION') ||
+               op.etapeWorkflow === '20';
+      }).slice(0, limite);
       
       res.status(200).json({
         status: 'SUCCESS',
@@ -106,7 +109,8 @@ module.exports = async (req, res) => {
           numeroManifeste: m.donneesMetier?.numero_manifeste,
           navire: m.donneesMetier?.navire,
           corridor: `${m.paysOrigine} → ${m.paysDestination}`,
-          dateEnregistrement: m.dateEnregistrement
+          dateEnregistrement: m.dateEnregistrement,
+          typeOperation: m.typeOperation
         })),
         timestamp: new Date().toISOString()
       });

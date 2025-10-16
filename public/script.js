@@ -426,9 +426,12 @@ async function chargerStatistiques() {
         // Mettre à jour l'affichage des pays UEMOA
         afficherPaysUEMOA(data.parPays || []);
         
-        // Mettre à jour le graphique des étapes
-        if (data.parType) {
+        // ✅ CORRECTION: Mettre à jour le graphique avec les données réelles
+        if (data.parType && Object.keys(data.parType).length > 0) {
+            console.log('📊 [Commission] Mise à jour graphique avec:', data.parType);
             mettreAJourGraphiqueEtapes(data.parType);
+        } else {
+            console.log('⚠️ [Commission] Pas de données parType pour le graphique');
         }
         
         ajouterLogSupervision('STATS', 'Statistiques mises à jour', 
@@ -493,27 +496,37 @@ function initGraphiques() {
 function mettreAJourGraphiqueEtapes(operationsParType) {
     let etape20 = 0, etape21 = 0, etape16 = 0, autres = 0;
     
+    // ✅ CORRECTION: Vérifier que operationsParType existe
+    if (!operationsParType || typeof operationsParType !== 'object') {
+        console.log('⚠️ [Commission] Pas de données pour le graphique');
+        return;
+    }
+    
     Object.keys(operationsParType).forEach(type => {
         const count = operationsParType[type];
+        const typeUpper = type.toUpperCase();
         
-        if (type.includes('MANIFESTE') || type.includes('TRANSMISSION')) {
+        if (typeUpper.includes('MANIFESTE') || typeUpper.includes('TRANSMISSION')) {
             etape20 += count;
-        } else if (type.includes('COMPLETION') || type.includes('DECLARATION') || type.includes('SOUMISSION')) {
+        } else if (typeUpper.includes('COMPLETION') || typeUpper.includes('DECLARATION') || typeUpper.includes('SOUMISSION')) {
             etape21 += count;
-        } else if (type.includes('TRANSIT')) {
+        } else if (typeUpper.includes('TRANSIT')) {
             etape16 += count;
         } else {
             autres += count;
         }
     });
     
-    if (chartEtapesWorkflows) {
+    // ✅ CORRECTION: Vérifier que le graphique existe avant de le mettre à jour
+    if (chartEtapesWorkflows && chartEtapesWorkflows.data) {
         chartEtapesWorkflows.data.datasets[0].data = [etape20, etape21, etape16, autres];
-        chartEtapesWorkflows.update();
+        chartEtapesWorkflows.update('none'); // Animation désactivée pour performance
         
         console.log('📊 [Commission] Graphique étapes mis à jour:', {
             etape20, etape21, etape16, autres
         });
+    } else {
+        console.log('⚠️ [Commission] Graphique non initialisé');
     }
 }
 
@@ -965,19 +978,22 @@ async function genererRapportSupervision() {
             dateGeneration: new Date().toISOString()
         };
         
-        // Créer et télécharger le rapport
-        const blob = new Blob([JSON.stringify(rapport, null, 2)], { type: 'application/json' });
+        // ✅ CORRECTION: Générer CSV au lieu de JSON
+        const csvContent = generateRapportCSV(rapport, operations.operations || []);
+        
+        // Créer et télécharger le rapport CSV
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         
         const a = document.createElement('a');
         a.href = url;
-        a.download = `commission-uemoa-rapport-supervision-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `commission-uemoa-rapport-supervision-${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        afficherNotification('📥 Rapport supervision UEMOA généré', 'success');
+        afficherNotification('📥 Rapport supervision UEMOA généré (CSV)', 'success');
         ajouterLogSupervision('RAPPORT', 'Rapport généré', `${rapport.supervision.operationsTotal} opérations`);
         
     } catch (error) {
@@ -985,6 +1001,61 @@ async function genererRapportSupervision() {
         afficherNotification('❌ Erreur génération rapport', 'error');
         ajouterLogSupervision('ERROR', 'Erreur rapport', error.message);
     }
+}
+
+// ✅ Fonction pour générer le CSV du rapport
+function generateRapportCSV(rapport, operations) {
+    let csv = '';
+    
+    // En-tête du rapport
+    csv += 'COMMISSION UEMOA - RAPPORT DE SUPERVISION\n';
+    csv += `Généré le,${new Date().toLocaleString('fr-FR')}\n`;
+    csv += `Période,${rapport.periode.debut} au ${rapport.periode.fin}\n`;
+    csv += '\n';
+    
+    // Résumé statistiques
+    csv += 'STATISTIQUES GLOBALES\n';
+    csv += 'Indicateur,Valeur\n';
+    csv += `Opérations Total,${rapport.supervision.operationsTotal}\n`;
+    csv += `Workflows Libre Pratique,${rapport.supervision.workflowsLibrePratique}\n`;
+    csv += `Workflows Transit,${rapport.supervision.workflowsTransit}\n`;
+    csv += `Pays Actifs,${rapport.supervision.paysActifs}\n`;
+    csv += `Corridors Actifs,${rapport.supervision.corridorsActifs}\n`;
+    csv += '\n';
+    
+    // Répartition par étapes
+    csv += 'RÉPARTITION PAR ÉTAPES\n';
+    csv += 'Étape,Nombre Opérations\n';
+    csv += `Étape 20 (Manifestes),${rapport.etapes.etape20_manifestes}\n`;
+    csv += `Étape 21 (Déclarations),${rapport.etapes.etape21_declarations}\n`;
+    csv += `Étape 16 (Transit),${rapport.etapes.etape16_transit}\n`;
+    csv += '\n';
+    
+    // Détail des opérations
+    csv += 'DÉTAIL DES OPÉRATIONS\n';
+    csv += 'ID,Numéro Opération,Type,Pays Origine,Pays Destination,Étape,Date\n';
+    
+    operations.forEach(op => {
+        const id = (op.id || '').replace(/,/g, ';');
+        const numero = (op.numeroOperation || '').replace(/,/g, ';');
+        const type = (op.typeOperation || '').replace(/,/g, ';');
+        const origine = op.paysOrigine || '';
+        const destination = op.paysDestination || '';
+        const etape = op.etapeWorkflow || '';
+        const date = formatDateTime(op.dateEnregistrement);
+        
+        csv += `${id},${numero},${type},${origine},${destination},${etape},${date}\n`;
+    });
+    
+    csv += '\n';
+    
+    // Recommandations
+    csv += 'RECOMMANDATIONS\n';
+    rapport.recommandations.forEach((rec, index) => {
+        csv += `${index + 1},"${rec.replace(/"/g, '""')}"\n`;
+    });
+    
+    return csv;
 }
 
 function genererRecommandationsCommission(stats, operations) {
@@ -1022,7 +1093,8 @@ function genererRecommandationsCommission(stats, operations) {
 // ✅ Export données Commission
 async function exporterDonnees() {
     try {
-        const response = await fetch(`${API_BASE}/rapports/exporter?format=json&type=commission`);
+        // ✅ CORRECTION: Export CSV par défaut
+        const response = await fetch(`${API_BASE}/rapports/exporter?format=csv&type=commission`);
         
         if (response.ok) {
             // Le serveur va directement déclencher le téléchargement
@@ -1031,14 +1103,14 @@ async function exporterDonnees() {
             
             const a = document.createElement('a');
             a.href = url;
-            a.download = `commission-uemoa-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `commission-uemoa-export-${new Date().toISOString().split('T')[0]}.csv`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            afficherNotification('📥 Données Commission UEMOA exportées', 'success');
-            ajouterLogSupervision('EXPORT', 'Export Commission effectué');
+            afficherNotification('📥 Données Commission UEMOA exportées (CSV)', 'success');
+            ajouterLogSupervision('EXPORT', 'Export Commission effectué (CSV)');
         } else {
             throw new Error(`HTTP ${response.status}`);
         }
