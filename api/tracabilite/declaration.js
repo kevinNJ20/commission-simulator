@@ -89,9 +89,17 @@ module.exports = async (req, res) => {
     } else if (req.method === 'GET') {
       // Lister les déclarations uniquement
       const limite = parseInt(req.query.limite) || 50;
-      const declarations = database.obtenirOperations(limite, { 
-        typeOperation: ['SOUMISSION_DECLARATION_DOUANIERE', 'DECLARATION_DOUANIERE', 'COMPLETION_LIBRE_PRATIQUE'] 
-      });
+      // ✅ CORRECTION: Filtrer toutes les opérations puis identifier les déclarations
+      const toutesOperations = database.obtenirOperations(limite * 2); // Plus large pour filtrer après
+      
+      // ✅ Filtrer côté JavaScript pour plus de flexibilité
+      const declarations = toutesOperations.filter(op => {
+        const type = op.typeOperation || '';
+        return type.includes('DECLARATION') || 
+               type.includes('COMPLETION') || 
+               type.includes('SOUMISSION') ||
+               op.etapeWorkflow === '21';
+      }).slice(0, limite);
       
       res.status(200).json({
         status: 'SUCCESS',

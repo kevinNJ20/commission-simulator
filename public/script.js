@@ -496,9 +496,9 @@ function mettreAJourGraphiqueEtapes(operationsParType) {
     Object.keys(operationsParType).forEach(type => {
         const count = operationsParType[type];
         
-        if (type.includes('MANIFESTE')) {
+        if (type.includes('MANIFESTE') || type.includes('TRANSMISSION')) {
             etape20 += count;
-        } else if (type.includes('COMPLETION') || type.includes('DECLARATION')) {
+        } else if (type.includes('COMPLETION') || type.includes('DECLARATION') || type.includes('SOUMISSION')) {
             etape21 += count;
         } else if (type.includes('TRANSIT')) {
             etape16 += count;
@@ -507,8 +507,14 @@ function mettreAJourGraphiqueEtapes(operationsParType) {
         }
     });
     
-    chartEtapesWorkflows.data.datasets[0].data = [etape20, etape21, etape16, autres];
-    chartEtapesWorkflows.update();
+    if (chartEtapesWorkflows) {
+        chartEtapesWorkflows.data.datasets[0].data = [etape20, etape21, etape16, autres];
+        chartEtapesWorkflows.update();
+        
+        console.log('📊 [Commission] Graphique étapes mis à jour:', {
+            etape20, etape21, etape16, autres
+        });
+    }
 }
 
 // ✅ Afficher pays UEMOA avec statuts

@@ -89,7 +89,12 @@ module.exports = async (req, res) => {
       // Lister les manifestes uniquement
       const limite = parseInt(req.query.limite) || 50;
       const manifestes = database.obtenirOperations(limite, { 
-        typeOperation: ['TRANSMISSION_MANIFESTE', 'TRANSMISSION_MANIFESTE_UEMOA'] 
+        typeOperation: [
+          'TRANSMISSION_MANIFESTE', 
+          'TRANSMISSION_MANIFESTE_UEMOA',
+          'TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE',  // ✅ Envoyé par Kit MuleSoft
+          'TEST_TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE'  // ✅ Tests
+        ] 
       });
       
       res.status(200).json({
