@@ -1,174 +1,86 @@
 # 🏛️ Commission UEMOA - Système Central de Traçabilité
 
-**Supervision Centrale** - Conforme au rapport PDF d'interconnexion des systèmes douaniers UEMOA  
-**ÉTAPES 20-21** (Libre Pratique) + **ÉTAPE 16** (Transit) selon Figure 19 et 20
+**Supervision Centrale des Workflows Douaniers UEMOA**  
+*Ouagadougou, Burkina Faso*
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](package.json)
+[![Node](https://img.shields.io/badge/node-22.x-green.svg)](package.json)
+[![License](https://img.shields.io/badge/license-OPEN-brightgreen.svg)](LICENSE)
 
 ---
 
-## 📋 **Vue d'ensemble**
+## 📋 Vue d'ensemble
 
-La **Commission UEMOA** implémente le système central de traçabilité pour la supervision des workflows d'interconnexion des systèmes douaniers selon l'architecture définie dans le rapport PDF. 
+La **Commission UEMOA** assure la supervision centralisée des échanges douaniers entre les 8 États membres de l'Union Économique et Monétaire Ouest Africaine.
 
-### 🎯 **Rôle selon Rapport PDF**
+### 🎯 Rôle selon Rapport PDF
 
-- **Organisme** : Commission de l'Union Économique et Monétaire Ouest Africaine
-- **Siège** : Ouagadougou, Burkina Faso  
-- **Fonction** : Supervision centralisée et traçabilité finale
-- **Architecture** : Sénégal (Pays A) ↔ Kit MuleSoft ↔ Mali (Pays B) ↔ **Commission UEMOA**
+| Étape | Workflow | Description |
+|-------|----------|-------------|
+| **20** | Libre Pratique (21 étapes) | Notification manifeste depuis Kit MuleSoft |
+| **21** | Libre Pratique (21 étapes) | Traçabilité finale workflow complet |
+| **16** | Transit (16 étapes) | Traçabilité finale opérations transit |
+
+### 🏗️ Architecture
+
+```
+Pays Côtier (ex: Sénégal)
+    ↓
+Kit MuleSoft d'Interconnexion
+    ↓
+Pays Hinterland (ex: Mali)
+    ↓
+🏛️ Commission UEMOA (Supervision Centrale)
+```
 
 ---
 
-## 🚀 **Démarrage rapide**
+## 🚀 Démarrage rapide
 
-### **1. Lancement local**
+### Installation
 
 ```bash
-# Option 1: Script npm (recommandé)
+npm install
+```
+
+### Lancement
+
+```bash
+# Démarrage normal
 npm start
 
-# Option 2: Node.js direct  
-node server.js
-
-# Option 3: Mode développement
+# Mode développement
 npm run dev
-```
 
-### **2. Avec Vercel (déploiement)**
-
-```bash
-# Si Vercel CLI installée
+# Avec Vercel CLI
 vercel dev
-
-# Sinon, mode local
-npm start
 ```
 
-### **3. URLs disponibles**
+Le système démarre sur **http://localhost:3003**
 
-- **🏛️ Dashboard Commission** : http://localhost:3003
-- **🏥 Health check** : http://localhost:3003/api/health
-- **📊 Statistiques supervision** : http://localhost:3003/api/statistiques
-- **📦 ÉTAPE 20 (Manifeste)** : http://localhost:3003/api/tracabilite/manifeste
-- **📋 ÉTAPE 21 (Déclaration)** : http://localhost:3003/api/tracabilite/declaration
-- **🚛 ÉTAPE 16 (Transit)** : http://localhost:3003/api/tracabilite/enregistrer
+### URLs principales
+
+- 🏛️ **Dashboard** : http://localhost:3003
+- 🏥 **Health Check** : http://localhost:3003/api/health
+- 📊 **Statistiques** : http://localhost:3003/api/statistiques
+- 📦 **ÉTAPE 20** : http://localhost:3003/api/tracabilite/manifeste
+- 📋 **ÉTAPE 21** : http://localhost:3003/api/tracabilite/declaration
+- 🚛 **ÉTAPE 16** : http://localhost:3003/api/tracabilite/enregistrer
 
 ---
 
-## 🔄 **Workflows Commission UEMOA selon Rapport PDF**
+## 📡 API Endpoints
 
-### **📦 Workflow Libre Pratique (21 étapes) - Étapes Commission 20-21**
-
-La Commission UEMOA supervise les **ÉTAPES 20-21** du workflow libre pratique :
-
-#### **ÉTAPE 20 : Notification Commission manifeste**
-- ✅ **Source** : Kit MuleSoft d'Interconnexion
-- ✅ **Déclencheur** : Transmission manifeste (Étape 5 Sénégal → Mali)
-- ✅ **Fonction** : Traçabilité centrale notification manifeste
-- ✅ **Endpoint** : `POST /api/tracabilite/manifeste`
-
-#### **ÉTAPE 21 : Traçabilité finale libre pratique**
-- ✅ **Source** : Kit MuleSoft après paiement Mali
-- ✅ **Déclencheur** : Completion workflow libre pratique (Étape 16 Mali)
-- ✅ **Fonction** : Supervision centralisée finale workflow 21 étapes
-- ✅ **Endpoint** : `POST /api/tracabilite/declaration`
-
-### **🚛 Workflow Transit (16 étapes) - Étape Commission 16**
-
-- ✅ **ÉTAPE 16** : Traçabilité finale transit
-- ✅ **Source** : Kit MuleSoft après confirmation arrivée Mali
-- ✅ **Fonction** : Supervision centralisée finale transit
-- ✅ **Endpoint** : `POST /api/tracabilite/enregistrer`
-
----
-
-## 🛠️ **Architecture technique**
-
-### **📁 Structure du projet**
-
+### Health Check
+```bash
+GET /api/health
 ```
-simulateur-commission-uemoa/
-├── api/                                    # APIs REST Commission
-│   ├── health.js                          # Health check Commission
-│   ├── statistiques.js                    # Métriques supervision
-│   ├── dashboard.js                       # Dashboard données
-│   ├── tracabilite/
-│   │   ├── enregistrer.js                 # ÉTAPES 20-21 et 16 (principal)
-│   │   ├── manifeste.js                   # ÉTAPE 20 spécialisé
-│   │   ├── declaration.js                 # ÉTAPE 21 spécialisé
-│   │   ├── lister.js                      # Liste opérations
-│   │   └── rechercher.js                  # Recherche traçabilité
-│   ├── rapports/
-│   │   ├── exporter.js                    # Export données Commission
-│   │   └── generer.js                     # Génération rapports
-│   └── kit/
-│       ├── test.js                        # Tests Kit MuleSoft
-│       ├── diagnostic.js                  # Diagnostic Kit
-│       └── synchroniser.js                # Synchronisation Kit
-├── lib/                                    # Librairies Commission
-│   ├── database.js                        # Base traçabilité centrale
-│   ├── analytics.js                       # Analytics supervision
-│   └── kit-client.js                      # Client Kit MuleSoft
-├── public/                                 # Interface web Commission
-│   ├── index.html                         # Dashboard Commission
-│   ├── script.js                          # JavaScript spécialisé
-│   └── style.css                          # Styles Commission UEMOA
-├── server.js                               # Serveur HTTP Commission
-├── package.json                           # Configuration Commission
-├── vercel.json                            # Déploiement Vercel
-└── README.md                              # Documentation
-```
+Vérification système et connectivité Kit MuleSoft.
 
-### **⚙️ Configuration technique**
+### Traçabilité ÉTAPE 20 (Manifeste)
+```bash
+POST /api/tracabilite/manifeste
 
-- **Runtime** : Node.js 18.x
-- **Port** : 3003 (configurable via PORT)
-- **Rôle** : SUPERVISION_CENTRALE_TRACABILITE
-- **Format** : UEMOA 2025.1 compatible
-- **Kit MuleSoft** : https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io
-
----
-
-## 📊 **APIs et Services Commission**
-
-### **🏥 Health Check Commission** - `/api/health`
-
-**Méthode** : `GET`  
-**Fonction** : État système Commission et connectivité Kit MuleSoft
-
-```json
-{
-  "service": "Commission UEMOA - Système Central de Traçabilité",
-  "status": "UP",
-  "commission": {
-    "nom": "Commission UEMOA",
-    "siege": "Ouagadougou, Burkina Faso",
-    "role": "SUPERVISION_CENTRALE_TRACABILITE"
-  },
-  "workflow": {
-    "libre_pratique": {
-      "etapes_commission": "20-21"
-    },
-    "transit": {
-      "etapes_commission": "16"
-    }
-  }
-}
-```
-
-### **📦 ÉTAPE 20 : Notification Manifeste** - `/api/tracabilite/manifeste`
-
-**Méthode** : `POST`  
-**Fonction** : Traçabilité notification manifeste depuis Kit MuleSoft
-
-**Headers requis** :
-```http
-Content-Type: application/json
-X-Source-System: KIT_INTERCONNEXION_MULESOFT
-X-Workflow-Step: 20_COMMISSION_MANIFESTE
-```
-
-**Payload UEMOA** :
-```json
 {
   "typeOperation": "TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE",
   "numeroOperation": "UEMOA_MAN_2025_001",
@@ -178,20 +90,16 @@ X-Workflow-Step: 20_COMMISSION_MANIFESTE
     "numero_manifeste": "MAN_SEN_2025_5016",
     "navire": "MARCO POLO",
     "consignataire": "MAERSK LINE SENEGAL",
-    "port_debarquement": "Port de Dakar",
     "nombre_articles": 3,
     "valeur_approximative": 25000000
   }
 }
 ```
 
-### **📋 ÉTAPE 21 : Finalisation Libre Pratique** - `/api/tracabilite/declaration`
+### Traçabilité ÉTAPE 21 (Finalisation)
+```bash
+POST /api/tracabilite/declaration
 
-**Méthode** : `POST`  
-**Fonction** : Traçabilité finale workflow libre pratique (21 étapes)
-
-**Payload** :
-```json
 {
   "typeOperation": "COMPLETION_LIBRE_PRATIQUE",
   "numeroOperation": "UEMOA_FINAL_2025_001",
@@ -199,7 +107,6 @@ X-Workflow-Step: 20_COMMISSION_MANIFESTE
   "paysDestination": "SEN",
   "donneesMetier": {
     "numero_declaration": "DEC_MLI_2025_001",
-    "manifeste_origine": "MAN_SEN_2025_5016",
     "montant_paye": 3500000,
     "workflow_complete": true,
     "etapes_totales": 21
@@ -207,291 +114,166 @@ X-Workflow-Step: 20_COMMISSION_MANIFESTE
 }
 ```
 
-### **🚛 ÉTAPE 16 : Traçabilité Transit** - `/api/tracabilite/enregistrer`
+### Traçabilité ÉTAPE 16 (Transit)
+```bash
+POST /api/tracabilite/enregistrer
 
-**Méthode** : `POST`  
-**Fonction** : Traçabilité finale transit (16 étapes)
-
-**Payload** :
-```json
 {
   "typeOperation": "COMPLETION_TRANSIT",
   "numeroOperation": "UEMOA_TRANSIT_2025_001",
-  "paysOrigine": "SEN", 
+  "paysOrigine": "SEN",
   "paysDestination": "MLI",
   "donneesMetier": {
     "numero_declaration_transit": "TRA_SEN_2025_001",
-    "transporteur": "TRANSPORT SAHEL",
     "arrivee_confirmee": true,
     "etapes_totales": 16
   }
 }
 ```
 
-### **📊 Statistiques Supervision** - `/api/statistiques`
+---
 
-**Méthode** : `GET`  
-**Fonction** : Métriques supervision centralisée
+## 🌍 États Membres UEMOA
 
-```json
-{
-  "global": {
-    "operationsTotal": 42,
-    "workflowsLibrePratique": 28,
-    "workflowsTransit": 14,
-    "paysConnectes": 3
-  },
-  "commission": {
-    "nom": "Commission UEMOA",
-    "siege": "Ouagadougou, Burkina Faso"
-  }
-}
-```
+### Pays Côtiers (Prime abord)
+- 🇸🇳 **Sénégal** - Dakar
+- 🇨🇮 **Côte d'Ivoire** - Abidjan
+- 🇧🇯 **Bénin** - Cotonou
+- 🇹🇬 **Togo** - Lomé
+- 🇬🇼 **Guinée-Bissau** - Bissau
+
+### Pays Hinterland (Destination)
+- 🇲🇱 **Mali** - Bamako
+- 🇧🇫 **Burkina Faso** - Ouagadougou
+- 🇳🇪 **Niger** - Niamey
 
 ---
 
-## 🗄️ **Base de données Commission**
-
-### **Modèle traçabilité centralisée**
-
-```javascript
-// Structure opérations Commission
-const operationCommission = {
-  id: "COMM_2025_001",
-  typeOperation: "TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE",
-  numeroOperation: "UEMOA_MAN_2025_001",
-  
-  // Étape workflow Commission
-  etapeWorkflow: "20", // 20, 21, ou 16
-  
-  // Pays UEMOA
-  paysOrigine: "SEN", // Sénégal
-  paysDestination: "MLI", // Mali
-  
-  // Commission UEMOA
-  commission: {
-    siege: "Ouagadougou, Burkina Faso",
-    fonction: "TRACABILITE_CENTRALE_UEMOA",
-    dateReception: Date
-  },
-  
-  // Source
-  source: "KIT_INTERCONNEXION_MULESOFT",
-  statut: "TRACE_COMMISSION",
-  dateEnregistrement: Date
-};
-```
-
-### **États supervision Commission**
-
-| Statut | Étapes | Description |
-|--------|--------|-------------|
-| `MANIFESTE_TRACE_ETAPE_20` | 20 | Notification manifeste tracée |
-| `LIBRE_PRATIQUE_FINALISE_ETAPE_21` | 21 | Workflow 21 étapes terminé |
-| `TRANSIT_FINALISE_ETAPE_16` | 16 | Workflow 16 étapes terminé |
-| `SUPERVISION_COMPLETE` | Toutes | Traçabilité Commission OK |
-
----
-
-## 🌍 **États membres UEMOA surveillés**
-
-### **Pays Côtiers (Prime abord)**
-- 🇸🇳 **SEN** : Sénégal (Dakar) - Port de Dakar
-- 🇨🇮 **CIV** : Côte d'Ivoire (Abidjan) - Port d'Abidjan  
-- 🇧🇯 **BEN** : Bénin (Cotonou) - Port de Cotonou
-- 🇹🇬 **TGO** : Togo (Lomé) - Port de Lomé
-- 🇬🇼 **GNB** : Guinée-Bissau (Bissau) - Port de Bissau
-
-### **Pays Hinterland (Destination)**
-- 🇲🇱 **MLI** : Mali (Bamako) - Destination
-- 🇧🇫 **BFA** : Burkina Faso (Ouagadougou) - Destination
-- 🇳🇪 **NER** : Niger (Niamey) - Destination
-
----
-
-## 🎨 **Interface Commission UEMOA**
-
-### **🖥️ Dashboard supervision spécialisé** - `public/index.html`
-
-**Fonctionnalités spécifiques Commission** :
-- ✅ **Métriques supervision** : Workflows libre pratique et transit
-- ✅ **Onglets spécialisés** : ÉTAPE 20, ÉTAPE 21, ÉTAPE 16
-- ✅ **Pays UEMOA** : Suivi activité 8 États membres
-- ✅ **Tests Kit MuleSoft** : Connectivité et diagnostic
-- ✅ **Journal supervision** : Logs traçabilité centralisée
-- ✅ **Graphiques** : Répartition par étape workflow
-- ✅ **Export Commission** : Données supervision
-
----
-
-## 🔧 **Kit MuleSoft Integration**
-
-### **Communication Commission ↔ Kit**
-
-```javascript
-// Configuration Commission vers Kit
-const KitClientCommission = {
-  baseURL: 'https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io/api/v1',
-  role: 'SUPERVISION_CENTRALE_TRACABILITE',
-  headers: {
-    'X-Source-System': 'COMMISSION_UEMOA_SUPERVISION',
-    'X-Commission-Role': 'TRACABILITE_CENTRALE'
-  }
-};
-```
-
-### **Réception notifications Kit**
-
-Le Kit MuleSoft notifie la Commission aux étapes :
-- **ÉTAPE 20** : Après transmission manifeste Sénégal → Mali
-- **ÉTAPE 21** : Après finalisation paiement Mali → Sénégal
-- **ÉTAPE 16** : Après confirmation arrivée transit Mali
-
----
-
-## 🧪 **Tests et Validation Commission**
-
-### **Tests automatiques**
+## 🧪 Tests
 
 ```bash
-# Test health check Commission
-curl http://localhost:3003/api/health
+# Test health check
+npm test
 
-# Test ÉTAPE 20 - Notification manifeste
+# Test ÉTAPE 20
 npm run test-etape-20
 
-# Test ÉTAPE 21 - Finalisation libre pratique  
+# Test ÉTAPE 21
 npm run test-etape-21
 
-# Test ÉTAPE 16 - Transit
+# Test ÉTAPE 16
 npm run test-etape-16
 
-# Test connectivité Kit MuleSoft
+# Test Kit MuleSoft
 npm run test-kit
 
 # Tous les tests
 npm run test-all-etapes
 ```
 
-### **Validation workflows Commission**
-
-1. **ÉTAPE 20** : Notification manifeste → Vérifier traçabilité Commission
-2. **ÉTAPE 21** : Finalisation libre pratique → Vérifier supervision
-3. **ÉTAPE 16** : Transit → Vérifier enregistrement Commission
-4. **Intégration** : Workflow complet avec Kit MuleSoft
-
 ---
 
-## 📈 **Monitoring et Observabilité**
+## 📁 Structure du projet
 
-### **Métriques Commission disponibles**
-
-- **Volume** : Opérations tracées par type d'étape
-- **Workflows** : Libre pratique vs Transit
-- **Pays** : Activité par État membre UEMOA
-- **Performance** : Temps traitement supervision
-- **Kit** : Connectivité Kit MuleSoft
-
-### **Logs structurés Commission**
-
-```javascript
-// Exemples logs supervision Commission
-console.log('🏛️ [Commission] ÉTAPE 20: Notification manifeste tracée');
-console.log('🏛️ [Commission] ÉTAPE 21: Workflow libre pratique finalisé');
-console.log('🏛️ [Commission] ÉTAPE 16: Transit tracé avec succès');
-console.log('📊 [Commission] Supervision centralisée activée');
+```
+simulateur-commission-uemoa/
+├── api/                           # APIs REST Commission
+│   ├── health.js                  # Health check
+│   ├── statistiques.js            # Stats supervision
+│   ├── tracabilite/
+│   │   ├── enregistrer.js         # ÉTAPES 20-21-16 (principal)
+│   │   ├── manifeste.js           # ÉTAPE 20 (spécialisé)
+│   │   └── declaration.js         # ÉTAPE 21 (spécialisé)
+│   └── kit/
+│       └── test.js                # Tests Kit MuleSoft
+├── lib/                           # Librairies
+│   ├── database.js                # Base traçabilité
+│   ├── analytics.js               # Analytics supervision
+│   └── kit-client.js              # Client Kit MuleSoft
+├── public/                        # Interface web
+│   ├── index.html                 # Dashboard Commission
+│   ├── script.js                  # JavaScript
+│   └── style.css                  # Styles
+├── server.js                      # Serveur HTTP
+├── package.json                   # Configuration
+└── README.md                      # Documentation
 ```
 
 ---
 
-## 🚀 **Déploiement Commission**
+## ⚙️ Configuration
 
-### **Variables d'environnement**
+### Variables d'environnement
 
-```env
-# Configuration Commission
+```bash
 PORT=3003
 NODE_ENV=production
-
-# Kit MuleSoft
 KIT_MULESOFT_URL=https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io/api/v1
-
-# Commission UEMOA
-ORGANISME_CODE=UEMOA
-ORGANISME_NOM=Commission UEMOA
-SIEGE=Ouagadougou, Burkina Faso
-ROLE=SUPERVISION_CENTRALE_TRACABILITE
 ```
 
-### **Scripts npm Commission**
+### Kit MuleSoft
 
-```json
-{
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "test": "curl http://localhost:3003/api/health",
-    "test-etape-20": "Test notification manifeste ÉTAPE 20",
-    "test-etape-21": "Test finalisation libre pratique ÉTAPE 21", 
-    "test-etape-16": "Test traçabilité transit ÉTAPE 16"
-  }
-}
-```
+Le système communique avec le Kit d'Interconnexion MuleSoft hébergé par chaque pays membre pour recevoir les notifications des étapes 20, 21 et 16.
 
 ---
 
-## 🔒 **Sécurité et Authentification Commission**
+## 📊 Dashboard Commission
 
-### **Headers spécifiques Commission**
-
-```http
-X-Source-System: COMMISSION_UEMOA_SUPERVISION
-X-Commission-Role: TRACABILITE_CENTRALE
-X-Workflow-Step: 20_COMMISSION_MANIFESTE
-X-Kit-Source: KIT_INTERCONNEXION_MULESOFT
-```
-
----
-
-## 📚 **Conformité Rapport PDF**
-
-### **Architecture conforme Figure 19 et 20**
-
-- ✅ **ÉTAPE 20** : "Transmission des informations à la commission de l'UEMOA"
-- ✅ **ÉTAPE 21** : Traçabilité finale libre pratique  
-- ✅ **ÉTAPE 16** : "Transmission des informations à la commission de l'UEMOA grâce à l'exécution de batchs périodiques"
-- ✅ **Supervision centralisée** : Ouagadougou, Burkina Faso
-- ✅ **8 États membres** : Côtiers + Hinterland
-
-### **Standards supportés**
-
-- ✅ **Format UEMOA 2025.1** : Compatible Kit MuleSoft
-- ✅ **Codes pays UEMOA** : SEN, MLI, BFA, CIV, BEN, TGO, NER, GNB
-- ✅ **Workflow Commission** : Conforme rapport PDF
-- ✅ **API REST** : Intégration Kit d'Interconnexion
+Le dashboard web permet de :
+- ✅ Visualiser les workflows libre pratique et transit
+- ✅ Suivre l'activité des 8 pays membres
+- ✅ Consulter les statistiques de supervision
+- ✅ Tester la connectivité Kit MuleSoft
+- ✅ Générer des rapports de supervision
+- ✅ Exporter les données tracées
 
 ---
 
-## 👥 **Équipe et Support**
+## 🔧 Dépannage
 
-**Développé par** : Cabinet Jasmine Conseil  
-**Conformité** : Rapport PDF UEMOA - Interconnexion SI Douaniers  
+### Erreur: Fichiers API manquants
+
+Vérifier que tous les fichiers suivants existent :
+- `api/tracabilite/enregistrer.js`
+- `api/tracabilite/manifeste.js`
+- `api/tracabilite/declaration.js`
+- `lib/database.js`
+- `lib/kit-client.js`
+
+### Erreur: Kit MuleSoft inaccessible
+
+1. Vérifier l'URL du Kit dans les variables d'environnement
+2. Tester la connectivité : `npm run test-kit`
+3. Consulter les logs serveur pour plus de détails
+
+---
+
+## 📚 Documentation complète
+
+Pour plus d'informations sur :
+- Les workflows détaillés (21 et 16 étapes)
+- L'architecture d'interconnexion
+- Les spécifications techniques
+- Les exemples de payloads
+
+Consulter la documentation technique du projet.
+
+---
+
+## 👥 Support
+
+**Organisme** : Commission UEMOA  
+**Siège** : Ouagadougou, Burkina Faso  
+**Rôle** : Supervision Centrale et Traçabilité  
 **Version** : 1.0.0-UEMOA-FINAL  
-**Format** : UEMOA 2025.1  
-**Runtime** : Node.js 18.x  
-
-**Contact** : Commission UEMOA - Ouagadougou, Burkina Faso  
-**Support** : Interface supervision avec diagnostic intégré
+**Runtime** : Node.js 22.x
 
 ---
 
-## 📊 **Écosystème complet selon Rapport PDF**
+## 📄 Licence
 
-1. **🇸🇳 Sénégal** (Pays A) - Prime abord côtier  
-2. **🔗 Kit MuleSoft** - Interconnexion décentralisée
-3. **🇲🇱 Mali** (Pays B) - Destination hinterland
-4. **🏛️ Commission UEMOA** (ce projet) - Supervision centrale
+OPEN - Projet de supervision des échanges douaniers UEMOA
 
 ---
 
-*Commission UEMOA - Ouagadougou, Burkina Faso - Supervision Centrale selon Rapport PDF*
+*Commission UEMOA - Supervision Centrale selon Rapport PDF d'Interconnexion des Systèmes Douaniers*
