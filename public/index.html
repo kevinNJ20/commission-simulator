@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Commission UEMOA - Traçabilité Centralisée</title>
     <link rel="stylesheet" href="style.css">
+    <!-- ✅ SCRIPT AUTHENTIFICATION - DOIT ÊTRE AVANT Chart.js -->
+    <script src="auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -31,6 +33,12 @@
             
             <h1>Commission UEMOA - Traçabilité Centralisée</h1>
             <p>🏛️ Ouagadougou, Burkina Faso - Supervision Centrale UEMOA</p>
+            
+            <!-- ✅ CONTENEUR POUR AFFICHER LES INFOS UTILISATEUR -->
+            <div id="user-info" style="margin-top: 15px; display: flex; justify-content: center;">
+                <!-- Les infos utilisateur seront injectées ici par auth.js -->
+            </div>
+            
             <div class="workflow-badge">ÉTAPES 20-21 (Libre Pratique) + 16 (Transit)</div>
         </header>
 
@@ -335,6 +343,9 @@
                 </div>
             </section>
         </main>
+        <div class="copyright">
+            © 2025 Jasmine Conseil - Prototype Mission d'Interconnexion UEMOA
+        </div>
     </div>
 
     <div id="notification" class="notification"></div>

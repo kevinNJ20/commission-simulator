@@ -41,6 +41,11 @@ const apiRouter = {
   'GET /api/health': () => require('./api/health'),
   'GET /api/statistiques': () => require('./api/statistiques'),
   'GET /api/dashboard': () => require('./api/dashboard'),
+
+  'POST /api/auth/login': () => require('./api/auth/login'),
+  'POST /api/auth/logout': () => require('./api/auth/logout'),
+  'GET /api/auth/verify': () => require('./api/auth/verify'),
+  'POST /api/auth/verify': () => require('./api/auth/verify'),
   
   // ✅ ÉTAPES 20-21 et 16: Endpoint traçabilité centrale (principal)
   'GET /api/tracabilite/enregistrer': () => require('./api/tracabilite/enregistrer'),

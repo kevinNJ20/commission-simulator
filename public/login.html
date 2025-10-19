@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏛️ Connexion - Commission UEMOA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff9500 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: slideIn 0.5s ease-out;
+            border-left: 5px solid #ff9500;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .uemoa-header {
+            margin-bottom: 30px;
+        }
+
+        .uemoa-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #0047AB 0%, #ff9500 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(255, 149, 0, 0.3);
+            font-size: 3em;
+        }
+
+        .flags-line {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .mini-flag {
+            width: 28px;
+            height: 21px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s;
+        }
+
+        .mini-flag:hover {
+            transform: scale(1.2);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .commission-role {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.1), rgba(255, 149, 0, 0.2));
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 3px solid #ff9500;
+        }
+
+        .commission-role p {
+            color: #495057;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff9500;
+            box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff9500 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 149, 0, 0.4);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .info-box li {
+            margin: 5px 0;
+        }
+
+        .footer-credit {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(104, 104, 104, 0.7);
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .uemoa-logo {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="uemoa-header">
+            <div class="uemoa-logo">🏛️</div>
+            
+            <div class="flags-line">
+                <!-- Drapeaux symboliques des 8 pays membres -->
+                <div class="mini-flag" title="Bénin" style="background: linear-gradient(90deg, #00843d 50%, #fcd116 50%, #e8112d 50%);"></div>
+                <div class="mini-flag" title="Burkina Faso" style="background: linear-gradient(180deg, #ef2b2d 50%, #009e49 50%);"></div>
+                <div class="mini-flag" title="Côte d'Ivoire" style="background: linear-gradient(90deg, #f77f00 33%, white 33%, #009e60 66%);"></div>
+                <div class="mini-flag" title="Guinée-Bissau" style="background: linear-gradient(90deg, #ce1126 40%, #fcd116 40%, #009e49 60%);"></div>
+                <div class="mini-flag" title="Mali" style="background: linear-gradient(90deg, #14b53a 33%, #fcd116 33%, #ce1126 66%);"></div>
+                <div class="mini-flag" title="Niger" style="background: linear-gradient(180deg, #e05206 33%, white 33%, #0db02b 66%);"></div>
+                <div class="mini-flag" title="Sénégal" style="background: linear-gradient(90deg, #00853f 33%, #fdef42 33%, #e31b23 66%);"></div>
+                <div class="mini-flag" title="Togo" style="background: linear-gradient(180deg, #006a4e 20%, #ffce00 40%, #006a4e 60%, #ffce00 80%, #006a4e 100%);"></div>
+            </div>
+        </div>
+
+        <h1>🏛️ Commission UEMOA</h1>
+        <p class="subtitle">Système Central de Traçabilité</p>
+        
+        <div class="commission-role">
+            <p><strong>📍 Siège:</strong> Ouagadougou, Burkina Faso</p>
+            <p><strong>🔍 Rôle:</strong> Supervision Centralisée UEMOA</p>
+            <p><strong>📊 Workflows:</strong> Étapes 20-21 (Libre Pratique) + 16 (Transit)</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">🔐 Identifiant Commission</label>
+                <input type="text" id="username" name="username" placeholder="Votre identifiant UEMOA" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔑 Mot de passe</label>
+                <input type="password" id="password" name="password" placeholder="Votre mot de passe" required>
+            </div>
+
+            <button type="submit" class="btn-login" id="btn-submit">
+                🏛️ Accéder à la Supervision
+            </button>
+        </form>
+
+        <div class="info-box">
+            <h3>ℹ️ Comptes de Démonstration Commission</h3>
+            <ul>
+                <li><strong>admin_commission</strong> / uemoa2025 (Administrateur)</li>
+                <li><strong>superviseur</strong> / super2025 (Superviseur)</li>
+                <li><strong>analyste</strong> / analyse2025 (Analyste)</li>
+                <li><strong>operateur</strong> / oper2025 (Opérateur)</li>
+            </ul>
+        </div>
+
+        <div class="footer-credit">
+            © 2025 Jasmine Conseil - Prototype Mission d'Interconnexion UEMOA
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'error') {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${type === 'error' ? '❌' : '✅'} ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const btnSubmit = document.getElementById('btn-submit');
+            
+            if (!username || !password) {
+                showAlert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<div class="loading"></div> Connexion...';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Stocker le token
+                    localStorage.setItem('auth_token', data.token);
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('user_role', data.user.role);
+                    localStorage.setItem('organisme', 'COMMISSION_UEMOA');
+                    
+                    showAlert('✅ Connexion réussie! Accès au système central...', 'success');
+                    
+                    // Redirection vers le dashboard Commission
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Identifiants incorrects');
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '🏛️ Accéder à la Supervision';
+                }
+            } catch (error) {
+                console.error('❌ Erreur connexion:', error);
+                showAlert('Erreur de connexion au système central');
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '🏛️ Accéder à la Supervision';
+            }
+        });
+
+        // Vérifier si déjà connecté
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('auth_token');
+            const organisme = localStorage.getItem('organisme');
+            
+            if (token && organisme === 'COMMISSION_UEMOA') {
+                // Rediriger vers le dashboard
+                window.location.href = '/index.html';
+            }
+        });
+    </script>
+</body>
+</html>
