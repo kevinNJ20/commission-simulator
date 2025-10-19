@@ -40,14 +40,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initGraphiques();
     verifierStatutCommission();
-    statusInterval = setInterval(verifierStatutCommission, 45000); // 45s pour Commission
+    statusInterval = setInterval(verifierStatutCommission, 45000);
     
     chargerToutesLesDonneesCommission();
-    refreshInterval = setInterval(chargerToutesLesDonneesCommission, 20000); // 20s pour Commission
+    refreshInterval = setInterval(chargerToutesLesDonneesCommission, 20000);
     
     ajouterLogSupervision('SYSTEME', 'Commission UEMOA démarrée', 'Supervision centrale UEMOA activée');
-    
-    // Initialiser le suivi des pays membres
     initialiserSuiviPaysUEMOA();
 });
 
@@ -88,52 +86,30 @@ async function verifierStatutCommission() {
 
 // ✅ Gestion des onglets Commission
 function showTab(tabName) {
-    // Désactiver tous les onglets
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     
-    // Activer l'onglet sélectionné
     document.getElementById(`tab-${tabName}`).classList.add('active');
     document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
     
     activeTab = tabName;
     
-    // Charger les données spécifiques selon l'onglet
     switch(tabName) {
-        case 'manifestes':
-            chargerManifestes();
-            ajouterLogSupervision('NAVIGATION', 'Onglet Manifestes', 'ÉTAPE 20 - Notifications manifeste');
-            break;
-        case 'declarations':
-            chargerDeclarations();
-            ajouterLogSupervision('NAVIGATION', 'Onglet Déclarations', 'ÉTAPE 21 - Finalisations workflow');
-            break;
-        case 'transit':
-            chargerTransit();
-            ajouterLogSupervision('NAVIGATION', 'Onglet Transit', 'ÉTAPE 16 - Traçabilité transit');
-            break;
-        case 'all':
-        default:
-            chargerToutesOperations();
-            ajouterLogSupervision('NAVIGATION', 'Toutes opérations', 'Vue globale Commission');
-            break;
+        case 'manifestes': chargerManifestes(); break;
+        case 'declarations': chargerDeclarations(); break;
+        case 'transit': chargerTransit(); break;
+        default: chargerToutesOperations(); break;
     }
 }
 
 // ✅ Charger MANIFESTES (ÉTAPE 20)
+// ✅ CORRECTION: Fonction chargerManifestes complète
 async function chargerManifestes() {
     try {
         console.log('📦 [Commission] Chargement manifestes ÉTAPE 20...');
         
-        // Utiliser l'endpoint spécialisé manifeste de la Commission
         const response = await fetch(`${API_BASE}/tracabilite/manifeste?limite=30`);
         const data = await response.json();
-        
-        console.log('📦 Réponse manifestes Commission:', data);
         
         const manifestesList = document.getElementById('manifestes-list');
         
@@ -141,12 +117,8 @@ async function chargerManifestes() {
             manifestesList.innerHTML = data.manifestes.map(manifeste => `
                 <div class="operation-item manifeste-item commission-item">
                     <div class="operation-header">
-                        <div class="operation-title">
-                            📦 ${manifeste.typeOperation || 'TRANSMISSION_MANIFESTE'}
-                        </div>
-                        <div class="operation-time">
-                            ${formatDateTime(manifeste.dateEnregistrement)}
-                        </div>
+                        <div class="operation-title">📦 ${manifeste.typeOperation || 'TRANSMISSION_MANIFESTE'}</div>
+                        <div class="operation-time">${formatDateTime(manifeste.dateEnregistrement)}</div>
                         <div class="etape-badge etape-20">ÉTAPE 20</div>
                     </div>
                     <div class="operation-details commission-details">
@@ -174,11 +146,9 @@ async function chargerManifestes() {
         document.getElementById('manifestes-list').innerHTML = `
             <div class="error-message commission-error">
                 <p class="text-danger">❌ Erreur chargement manifestes ÉTAPE 20</p>
-                <p class="text-muted">Détails: ${error.message}</p>
                 <button class="btn btn-secondary" onclick="chargerManifestes()">🔄 Réessayer</button>
             </div>
         `;
-        ajouterLogSupervision('ERROR', 'Échec chargement manifestes', error.message);
     }
 }
 
@@ -187,11 +157,8 @@ async function chargerDeclarations() {
     try {
         console.log('📋 [Commission] Chargement déclarations ÉTAPE 21...');
         
-        // Utiliser l'endpoint spécialisé déclaration de la Commission
         const response = await fetch(`${API_BASE}/tracabilite/declaration?limite=30`);
         const data = await response.json();
-        
-        console.log('📋 Réponse déclarations Commission:', data);
         
         const declarationsList = document.getElementById('declarations-list');
         
@@ -199,12 +166,8 @@ async function chargerDeclarations() {
             declarationsList.innerHTML = data.declarations.map(declaration => `
                 <div class="operation-item declaration-item commission-item">
                     <div class="operation-header">
-                        <div class="operation-title">
-                            📋 ${declaration.typeOperation || 'COMPLETION_LIBRE_PRATIQUE'}
-                        </div>
-                        <div class="operation-time">
-                            ${formatDateTime(declaration.dateEnregistrement)}
-                        </div>
+                        <div class="operation-title">📋 ${declaration.typeOperation || 'COMPLETION_LIBRE_PRATIQUE'}</div>
+                        <div class="operation-time">${formatDateTime(declaration.dateEnregistrement)}</div>
                         <div class="etape-badge etape-21">ÉTAPE 21</div>
                     </div>
                     <div class="operation-details commission-details">
@@ -232,52 +195,39 @@ async function chargerDeclarations() {
         document.getElementById('declarations-list').innerHTML = `
             <div class="error-message commission-error">
                 <p class="text-danger">❌ Erreur chargement déclarations ÉTAPE 21</p>
-                <p class="text-muted">Détails: ${error.message}</p>
                 <button class="btn btn-secondary" onclick="chargerDeclarations()">🔄 Réessayer</button>
             </div>
         `;
-        ajouterLogSupervision('ERROR', 'Échec chargement déclarations', error.message);
     }
 }
 
-// ✅ Charger TRANSIT (ÉTAPE 16)
+// ✅ CORRECTION: Fonction chargerTransit complète
 async function chargerTransit() {
     try {
         console.log('🚛 [Commission] Chargement transit ÉTAPE 16...');
         
-        // Chercher les opérations transit dans l'endpoint général avec filtre
         const response = await fetch(`${API_BASE}/tracabilite/enregistrer?limite=30&etapeWorkflow=16`);
         const data = await response.json();
-        
-        console.log('🚛 Réponse transit Commission:', data);
         
         const transitList = document.getElementById('transit-list');
         
         if (data.status === 'SUCCESS' && data.operations && data.operations.length > 0) {
-            // Filtrer les opérations transit côté client
             const operationsTransit = data.operations.filter(op => 
-                op.typeOperation && (
-                    op.typeOperation.includes('TRANSIT') || 
-                    op.etapeWorkflow === '16'
-                )
+                op.typeOperation && (op.typeOperation.includes('TRANSIT') || op.etapeWorkflow === '16')
             );
             
             if (operationsTransit.length > 0) {
                 transitList.innerHTML = operationsTransit.map(transit => `
                     <div class="operation-item transit-item commission-item">
                         <div class="operation-header">
-                            <div class="operation-title">
-                                🚛 ${transit.typeOperation || 'COMPLETION_TRANSIT'}
-                            </div>
-                            <div class="operation-time">
-                                ${formatDateTime(transit.dateEnregistrement)}
-                            </div>
+                            <div class="operation-title">🚛 ${transit.typeOperation || 'COMPLETION_TRANSIT'}</div>
+                            <div class="operation-time">${formatDateTime(transit.dateEnregistrement)}</div>
                             <div class="etape-badge etape-16">ÉTAPE 16</div>
                         </div>
                         <div class="operation-details commission-details">
                             <div><strong>N° Opération:</strong> ${transit.numeroOperation || transit.id}</div>
                             <div><strong>Corridor:</strong> ${transit.corridor}</div>
-                            <div><strong>Déclaration Transit:</strong> ${transit.donneesMetier?.numero_declaration_transit || 'N/A'}</div>
+                            <div><strong>Transit:</strong> ${transit.donneesMetier?.numero_declaration_transit || 'N/A'}</div>
                             <div><strong>Traçabilité:</strong> <span class="badge badge-transit">TRANSIT FINALISÉ</span></div>
                         </div>
                     </div>
@@ -308,15 +258,13 @@ async function chargerTransit() {
         document.getElementById('transit-list').innerHTML = `
             <div class="error-message commission-error">
                 <p class="text-danger">❌ Erreur chargement transit ÉTAPE 16</p>
-                <p class="text-muted">Détails: ${error.message}</p>
                 <button class="btn btn-secondary" onclick="chargerTransit()">🔄 Réessayer</button>
             </div>
         `;
-        ajouterLogSupervision('ERROR', 'Échec chargement transit', error.message);
     }
 }
 
-// ✅ Charger toutes les opérations Commission
+// ✅ CORRECTION: Fonction chargerToutesOperations complète
 async function chargerToutesOperations() {
     try {
         console.log('🔍 [Commission] Chargement toutes opérations tracées...');
@@ -324,28 +272,24 @@ async function chargerToutesOperations() {
         const response = await fetch(`${API_BASE}/tracabilite/enregistrer?limite=50`);
         const data = await response.json();
         
-        console.log('🔍 Réponse toutes opérations Commission:', data);
-        
         const operationsList = document.getElementById('all-operations-list');
         
         if (data.status === 'SUCCESS' && data.operations && data.operations.length > 0) {
             operationsList.innerHTML = data.operations.map(op => {
-                // Déterminer le type d'opération et l'étape
                 const isManifeste = op.typeOperation && op.typeOperation.includes('MANIFESTE');
-                const isDeclaration = op.typeOperation && op.typeOperation.includes('DECLARATION') || op.typeOperation.includes('COMPLETION');
+                const isDeclaration = op.typeOperation && (op.typeOperation.includes('DECLARATION') || op.typeOperation.includes('COMPLETION'));
                 const isTransit = op.typeOperation && op.typeOperation.includes('TRANSIT');
                 
-                let etapeWorkflow = op.etapeWorkflow || 'N/A';
                 let etapeClass = '';
                 let etapeLabel = '';
                 
-                if (isManifeste || etapeWorkflow === '20') {
+                if (isManifeste || op.etapeWorkflow === '20') {
                     etapeClass = 'etape-20';
                     etapeLabel = 'ÉTAPE 20';
-                } else if (isDeclaration || etapeWorkflow === '21') {
+                } else if (isDeclaration || op.etapeWorkflow === '21') {
                     etapeClass = 'etape-21';  
                     etapeLabel = 'ÉTAPE 21';
-                } else if (isTransit || etapeWorkflow === '16') {
+                } else if (isTransit || op.etapeWorkflow === '16') {
                     etapeClass = 'etape-16';
                     etapeLabel = 'ÉTAPE 16';
                 } else {
@@ -354,7 +298,7 @@ async function chargerToutesOperations() {
                 }
                 
                 return `
-                    <div class="operation-item ${isManifeste ? 'manifeste-item' : isDeclaration ? 'declaration-item' : isTransit ? 'transit-item' : 'other-item'} commission-item">
+                    <div class="operation-item commission-item">
                         <div class="operation-header">
                             <div class="operation-title">
                                 ${getOperationIcon(op.typeOperation)} ${op.typeOperation || 'OPERATION'}
@@ -373,15 +317,6 @@ async function chargerToutesOperations() {
                     </div>
                 `;
             }).join('');
-            
-            // Mettre à jour les compteurs des métriques
-            const manifestes = data.operations.filter(op => op.typeOperation && op.typeOperation.includes('MANIFESTE'));
-            const declarations = data.operations.filter(op => op.typeOperation && (op.typeOperation.includes('DECLARATION') || op.typeOperation.includes('COMPLETION')));
-            const transit = data.operations.filter(op => op.typeOperation && op.typeOperation.includes('TRANSIT'));
-            
-            document.getElementById('workflows-libre-pratique').textContent = manifestes.length + declarations.length;
-            document.getElementById('workflows-transit').textContent = transit.length;
-            
         } else {
             operationsList.innerHTML = `
                 <div class="no-data commission-no-data">
@@ -407,35 +342,29 @@ async function chargerToutesOperations() {
     }
 }
 
-// ✅ Charger statistiques Commission UEMOA
+// ✅ CORRECTION: Fonction chargerStatistiques avec mise à jour graphique
 async function chargerStatistiques() {
     try {
-        console.log('📊 [Commission] Chargement statistiques supervision...');
-        
         const response = await fetch(`${API_BASE}/statistiques`);
         const data = await response.json();
         
-        console.log('📊 Statistiques Commission:', data);
-        
-        // Mettre à jour les métriques Commission
         document.getElementById('workflows-libre-pratique').textContent = data.global?.workflowsLibrePratique || 0;
         document.getElementById('workflows-transit').textContent = data.global?.workflowsTransit || 0;
         document.getElementById('pays-actifs').textContent = data.global?.paysConnectes || 0;
         document.getElementById('corridors-surveilles').textContent = data.corridors?.length || 0;
         
-        // Mettre à jour l'affichage des pays UEMOA
-        afficherPaysUEMOA(data.parPays || []);
-        
-        // ✅ CORRECTION: Mettre à jour le graphique avec les données réelles
+        // ✅ CORRECTION: Mise à jour du graphique
         if (data.parType && Object.keys(data.parType).length > 0) {
-            console.log('📊 [Commission] Mise à jour graphique avec:', data.parType);
             mettreAJourGraphiqueEtapes(data.parType);
-        } else {
-            console.log('⚠️ [Commission] Pas de données parType pour le graphique');
+        }
+        
+        // ✅ CORRECTION: Affichage des pays
+        if (data.parPays && data.parPays.length > 0) {
+            afficherPaysUEMOA(data.parPays);
         }
         
         ajouterLogSupervision('STATS', 'Statistiques mises à jour', 
-            `${data.global?.operationsTotal || 0} opérations, ${data.global?.paysConnectes || 0} pays`);
+            `${data.global?.operationsTotal || 0} opérations`);
         
     } catch (error) {
         console.error('❌ [Commission] Erreur chargement statistiques:', error);
@@ -445,23 +374,15 @@ async function chargerStatistiques() {
 
 // ✅ Charger toutes les données Commission
 async function chargerToutesLesDonneesCommission() {
-    try {
-        await Promise.all([
-            chargerStatistiques(),
-            activeTab === 'manifestes' ? chargerManifestes() : 
-            activeTab === 'declarations' ? chargerDeclarations() : 
-            activeTab === 'transit' ? chargerTransit() :
-            chargerToutesOperations()
-        ]);
-    } catch (error) {
-        console.error('❌ [Commission] Erreur chargement global:', error);
-        afficherNotification('Erreur lors du chargement des données Commission', 'error');
-    }
+    await chargerStatistiques();
+    if (activeTab === 'manifestes') await chargerManifestes();
+    else if (activeTab === 'declarations') await chargerDeclarations();
+    else if (activeTab === 'transit') await chargerTransit();
+    else await chargerToutesOperations();
 }
 
 // ✅ Initialiser graphiques Commission
 function initGraphiques() {
-    // Graphique Étapes Workflows Commission
     const ctxEtapes = document.getElementById('chart-etapes-workflows');
     chartEtapesWorkflows = new Chart(ctxEtapes, {
         type: 'doughnut',
@@ -469,20 +390,13 @@ function initGraphiques() {
             labels: ['Étape 20 (Manifeste)', 'Étape 21 (Finalisation)', 'Étape 16 (Transit)', 'Autres'],
             datasets: [{
                 data: [0, 0, 0, 0],
-                backgroundColor: [
-                    '#667eea', // Bleu pour Étape 20
-                    '#764ba2', // Violet pour Étape 21  
-                    '#f093fb', // Rose pour Étape 16
-                    '#feca57'  // Orange pour Autres
-                ]
+                backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#feca57']
             }]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: {
-                    position: 'bottom'
-                },
+                legend: { position: 'bottom' },
                 title: {
                     display: true,
                     text: 'Répartition par Étape Commission UEMOA'
@@ -492,15 +406,14 @@ function initGraphiques() {
     });
 }
 
-// ✅ Mettre à jour graphique des étapes
+// ✅ CORRECTION: Mise à jour graphique étapes
 function mettreAJourGraphiqueEtapes(operationsParType) {
-    let etape20 = 0, etape21 = 0, etape16 = 0, autres = 0;
-    
-    // ✅ CORRECTION: Vérifier que operationsParType existe
-    if (!operationsParType || typeof operationsParType !== 'object') {
-        console.log('⚠️ [Commission] Pas de données pour le graphique');
+    if (!chartEtapesWorkflows || !chartEtapesWorkflows.data) {
+        console.log('⚠️ [Commission] Graphique non initialisé');
         return;
     }
+    
+    let etape20 = 0, etape21 = 0, etape16 = 0, autres = 0;
     
     Object.keys(operationsParType).forEach(type => {
         const count = operationsParType[type];
@@ -508,7 +421,7 @@ function mettreAJourGraphiqueEtapes(operationsParType) {
         
         if (typeUpper.includes('MANIFESTE') || typeUpper.includes('TRANSMISSION')) {
             etape20 += count;
-        } else if (typeUpper.includes('COMPLETION') || typeUpper.includes('DECLARATION') || typeUpper.includes('SOUMISSION')) {
+        } else if (typeUpper.includes('COMPLETION') || typeUpper.includes('DECLARATION')) {
             etape21 += count;
         } else if (typeUpper.includes('TRANSIT')) {
             etape16 += count;
@@ -517,22 +430,20 @@ function mettreAJourGraphiqueEtapes(operationsParType) {
         }
     });
     
-    // ✅ CORRECTION: Vérifier que le graphique existe avant de le mettre à jour
-    if (chartEtapesWorkflows && chartEtapesWorkflows.data) {
-        chartEtapesWorkflows.data.datasets[0].data = [etape20, etape21, etape16, autres];
-        chartEtapesWorkflows.update('none'); // Animation désactivée pour performance
-        
-        console.log('📊 [Commission] Graphique étapes mis à jour:', {
-            etape20, etape21, etape16, autres
-        });
-    } else {
-        console.log('⚠️ [Commission] Graphique non initialisé');
-    }
+    chartEtapesWorkflows.data.datasets[0].data = [etape20, etape21, etape16, autres];
+    chartEtapesWorkflows.update('none');
+    
+    console.log('📊 [Commission] Graphique mis à jour:', { etape20, etape21, etape16, autres });
 }
 
-// ✅ Afficher pays UEMOA avec statuts
+// ✅ CORRECTION: Affichage pays UEMOA
 function afficherPaysUEMOA(statistiquesParPays) {
     const paysUEMOAList = document.getElementById('pays-uemoa-list');
+    
+    if (!paysUEMOAList) {
+        console.log('⚠️ [Commission] Element pays-uemoa-list non trouvé');
+        return;
+    }
     
     if (statistiquesParPays.length > 0) {
         paysUEMOAList.innerHTML = statistiquesParPays.map(pays => {
@@ -556,7 +467,7 @@ function afficherPaysUEMOA(statistiquesParPays) {
                             <span class="stat-label">Reçues</span>
                         </div>
                     </div>
-                    <span class="pays-status ${totalOperations > 0 ? 'active' : 'inactive'}" id="status-${pays.code}">
+                    <span class="pays-status ${totalOperations > 0 ? 'active' : 'inactive'}">
                         ${totalOperations > 0 ? '🟢' : '⚪'}
                     </span>
                 </div>
@@ -571,18 +482,17 @@ function afficherPaysUEMOA(statistiquesParPays) {
     }
 }
 
-// ✅ Initialiser suivi pays UEMOA
+// Fonction pour initialiser le suivi des pays
 function initialiserSuiviPaysUEMOA() {
     console.log('🌍 [Commission] Initialisation suivi pays membres UEMOA...');
     
     Object.keys(PAYS_UEMOA).forEach(codePays => {
         const paysInfo = PAYS_UEMOA[codePays];
-        console.log(`📍 ${paysInfo.flag} ${paysInfo.nom} (${codePays}) - ${paysInfo.ville} - ${paysInfo.type}`);
+        console.log(`📍 ${paysInfo.flag} ${paysInfo.nom} (${codePays})`);
         
-        // Initialiser le statut du pays
         const statusElement = document.getElementById(`status-${codePays}`);
         if (statusElement) {
-            statusElement.textContent = '⚪'; // Statut inactif par défaut
+            statusElement.textContent = '⚪';
         }
     });
     
@@ -813,6 +723,7 @@ async function synchroniserAvecKit() {
 
 // ✅ Simulations spécifiques Commission
 
+// ✅ Fonctions de simulation
 async function simulerManifeste() {
     const manifesteTest = {
         typeOperation: 'TEST_TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE',
@@ -908,18 +819,12 @@ async function envoyerOperationTestCommission(operation, typeOperation) {
         });
         
         if (response.ok) {
-            const result = await response.json();
             afficherNotification(`✅ ${typeOperation.toUpperCase()} test enregistré`, 'success');
             ajouterLogSupervision('TEST_SIMULATION', `Simulation ${typeOperation} réussie`, operation.numeroOperation);
-            
-            // Actualiser les données après la simulation
-            setTimeout(() => {
-                chargerToutesLesDonneesCommission();
-            }, 1000);
+            setTimeout(() => chargerToutesLesDonneesCommission(), 1000);
         } else {
             const error = await response.json();
             afficherNotification(`❌ Erreur test ${typeOperation}: ${error.message}`, 'error');
-            ajouterLogSupervision('ERROR', `Simulation ${typeOperation} échouée`, error.message);
         }
     } catch (error) {
         afficherNotification(`❌ Erreur technique test ${typeOperation}`, 'error');
@@ -927,74 +832,31 @@ async function envoyerOperationTestCommission(operation, typeOperation) {
     }
 }
 
-// ✅ Génération rapport supervision Commission
+// ✅ CORRECTION: Export CSV
 async function genererRapportSupervision() {
     try {
-        ajouterLogSupervision('RAPPORT', 'Génération rapport', 'Rapport supervision en cours...');
+        ajouterLogSupervision('RAPPORT', 'Génération rapport', 'En cours...');
         afficherNotification('📊 Génération rapport supervision UEMOA...', 'info');
         
-        // Récupérer toutes les données nécessaires
-        const [statsResponse, operationsResponse] = await Promise.all([
-            fetch(`${API_BASE}/statistiques`),
-            fetch(`${API_BASE}/tracabilite/enregistrer?limite=100`)
-        ]);
+        const response = await fetch(`${API_BASE}/rapports/exporter?format=csv&type=commission`);
         
-        if (!statsResponse.ok || !operationsResponse.ok) {
-            throw new Error('Erreur récupération données rapport');
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `commission-uemoa-rapport-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            afficherNotification('📥 Rapport supervision UEMOA généré (CSV)', 'success');
+            ajouterLogSupervision('RAPPORT', 'Rapport généré', 'Format CSV');
+        } else {
+            throw new Error(`HTTP ${response.status}`);
         }
-        
-        const stats = await statsResponse.json();
-        const operations = await operationsResponse.json();
-        
-        // Analyser les données
-        const rapport = {
-            commission: {
-                nom: 'Commission de l\'Union Économique et Monétaire Ouest Africaine',
-                sigle: 'UEMOA',
-                siege: 'Ouagadougou, Burkina Faso'
-            },
-            periode: {
-                debut: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                fin: new Date().toISOString().split('T')[0],
-                duree: '7 jours'
-            },
-            supervision: {
-                operationsTotal: stats.global?.operationsTotal || 0,
-                workflowsLibrePratique: stats.global?.workflowsLibrePratique || 0,
-                workflowsTransit: stats.global?.workflowsTransit || 0,
-                paysActifs: stats.global?.paysConnectes || 0,
-                corridorsActifs: stats.corridors?.length || 0
-            },
-            etapes: {
-                etape20_manifestes: operations.operations?.filter(op => 
-                    op.typeOperation && op.typeOperation.includes('MANIFESTE')).length || 0,
-                etape21_declarations: operations.operations?.filter(op => 
-                    op.typeOperation && (op.typeOperation.includes('COMPLETION') || op.typeOperation.includes('DECLARATION'))).length || 0,
-                etape16_transit: operations.operations?.filter(op => 
-                    op.typeOperation && op.typeOperation.includes('TRANSIT')).length || 0
-            },
-            paysUEMOA: stats.parPays || [],
-            recommandations: genererRecommandationsCommission(stats, operations.operations || []),
-            dateGeneration: new Date().toISOString()
-        };
-        
-        // ✅ CORRECTION: Générer CSV au lieu de JSON
-        const csvContent = generateRapportCSV(rapport, operations.operations || []);
-        
-        // Créer et télécharger le rapport CSV
-        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `commission-uemoa-rapport-supervision-${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        afficherNotification('📥 Rapport supervision UEMOA généré (CSV)', 'success');
-        ajouterLogSupervision('RAPPORT', 'Rapport généré', `${rapport.supervision.operationsTotal} opérations`);
         
     } catch (error) {
         console.error('❌ [Commission] Erreur génération rapport:', error);
@@ -1090,14 +952,12 @@ function genererRecommandationsCommission(stats, operations) {
     return recommandations;
 }
 
-// ✅ Export données Commission
+// ✅ CORRECTION: Export données CSV
 async function exporterDonnees() {
     try {
-        // ✅ CORRECTION: Export CSV par défaut
         const response = await fetch(`${API_BASE}/rapports/exporter?format=csv&type=commission`);
         
         if (response.ok) {
-            // Le serveur va directement déclencher le téléchargement
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
             
@@ -1127,35 +987,19 @@ function ajouterLogSupervision(type, operation, details = '') {
     const logContainer = document.getElementById('activity-log');
     const timestamp = new Date().toLocaleString('fr-FR');
     
-    // Filtrage par niveau si sélectionné
-    const filterLevel = document.getElementById('log-filter-level')?.value;
-    if (filterLevel && filterLevel !== 'all' && type !== filterLevel) {
-        return; // Ne pas ajouter si filtré
-    }
-    
     const logEntry = document.createElement('div');
     logEntry.className = `log-entry commission-log ${type.toLowerCase()}`;
     logEntry.innerHTML = `
         <div class="log-timestamp">${timestamp}</div>
-        <div class="log-type">${getOperationIcon(type)} ${type}</div>
+        <div class="log-type">${type}</div>
         <div class="log-operation">${operation}</div>
         ${details ? `<div class="log-details">${details}</div>` : ''}
-        <div class="log-source">Commission UEMOA</div>
     `;
     
     logContainer.insertBefore(logEntry, logContainer.firstChild);
-    
-    // Garder seulement les 100 dernières entrées (plus pour Commission)
     while (logContainer.children.length > 100) {
         logContainer.removeChild(logContainer.lastChild);
     }
-    
-    // Auto-scroll si activé
-    if (document.getElementById('auto-scroll')?.checked) {
-        logEntry.scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    console.log(`📊 [Commission UEMOA] ${type}: ${operation} - ${details}`);
 }
 
 function viderJournal() {
@@ -1223,11 +1067,8 @@ function formatDateTime(dateString) {
     if (!dateString) return 'Date inconnue';
     const date = new Date(dateString);
     return date.toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
     });
 }
 
@@ -1235,10 +1076,7 @@ function afficherNotification(message, type = 'info') {
     const notification = document.getElementById('notification');
     notification.textContent = message;
     notification.className = `notification ${type} show`;
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, 4000);
+    setTimeout(() => notification.classList.remove('show'), 4000);
 }
 
 // ✅ Fonctions publiques pour les boutons HTML
