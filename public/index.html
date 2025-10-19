@@ -27,13 +27,11 @@
                     <img src="images/flags/mali.png" alt="Mali" class="country-flag active" title="Mali (Pays actuel)">
                     <img src="images/flags/niger.png" alt="Niger" class="country-flag" title="Niger">
                 </div>
-                
-                
             </div>
             
-            <h1>Système Douanier Mali (Pays B)</h1>
-            <p>🏛️ Bamako - Pays de Destination - Workflow Manuel</p>
-            <div class="workflow-badge">ÉTAPES 6-16 : Traitement Manuel</div>
+            <h1>Commission UEMOA - Traçabilité Centralisée</h1>
+            <p>🏛️ Ouagadougou, Burkina Faso - Supervision Centrale UEMOA</p>
+            <div class="workflow-badge">ÉTAPES 20-21 (Libre Pratique) + 16 (Transit)</div>
         </header>
 
         <main class="main">
@@ -343,7 +341,7 @@
     
     <script>
         // ============================================================================
-        // COMMISSION UEMOA - Script JavaScript Intégré (Version Corrigée)
+        // COMMISSION UEMOA - Script JavaScript (Version Corrigée FINALE)
         // Rôle: ÉTAPES 20-21 (Libre Pratique) + ÉTAPE 16 (Transit)
         // Siège: Ouagadougou, Burkina Faso
         // ============================================================================
@@ -383,14 +381,12 @@
             
             initGraphiques();
             verifierStatutCommission();
-            statusInterval = setInterval(verifierStatutCommission, 45000); // 45s pour Commission
+            statusInterval = setInterval(verifierStatutCommission, 45000);
             
             chargerToutesLesDonneesCommission();
-            refreshInterval = setInterval(chargerToutesLesDonneesCommission, 20000); // 20s pour Commission
+            refreshInterval = setInterval(chargerToutesLesDonneesCommission, 20000);
             
             ajouterLogSupervision('SYSTEME', 'Commission UEMOA démarrée', 'Supervision centrale UEMOA activée');
-            
-            // Initialiser le suivi des pays membres
             initialiserSuiviPaysUEMOA();
         });
 
@@ -398,45 +394,25 @@
         async function verifierStatutCommission() {
             try {
                 console.log('🏥 [Commission] Vérification statut système central...');
-                
                 const response = await fetch(`${API_BASE}/health`);
                 const data = await response.json();
                 
-                const indicator = document.getElementById('status-indicator');
-                const text = document.getElementById('status-text');
-                
                 if (data.status === 'UP') {
-                    indicator.textContent = '🟢';
-                    text.textContent = 'Commission opérationnelle';
-                    document.getElementById('status').style.background = '#d4edda';
-                    
-                    // Mettre à jour les infos Commission
+                    console.log('✅ [Commission] Système opérationnel');
                     if (data.commission) {
                         console.log('🏛️ Commission UEMOA:', data.commission.nom);
                         console.log('📍 Siège:', data.commission.siege);
                     }
-                    
-                } else {
-                    indicator.textContent = '🔴';
-                    text.textContent = 'Commission indisponible';
-                    document.getElementById('status').style.background = '#f8d7da';
                 }
             } catch (error) {
                 console.error('❌ [Commission] Erreur vérification statut:', error);
-                document.getElementById('status-indicator').textContent = '🔴';
-                document.getElementById('status-text').textContent = 'Erreur système central';
-                document.getElementById('status').style.background = '#f8d7da';
             }
         }
 
-        // ✅ Fonctions de gestion des onglets et chargement des données
+        // ✅ Gestion des onglets Commission
         function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             
             document.getElementById(`tab-${tabName}`).classList.add('active');
             document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
@@ -444,47 +420,181 @@
             activeTab = tabName;
             
             switch(tabName) {
-                case 'manifestes':
-                    chargerManifestes();
-                    ajouterLogSupervision('NAVIGATION', 'Onglet Manifestes', 'ÉTAPE 20 - Notifications manifeste');
-                    break;
-                case 'declarations':
-                    chargerDeclarations();
-                    ajouterLogSupervision('NAVIGATION', 'Onglet Déclarations', 'ÉTAPE 21 - Finalisations workflow');
-                    break;
-                case 'transit':
-                    chargerTransit();
-                    ajouterLogSupervision('NAVIGATION', 'Onglet Transit', 'ÉTAPE 16 - Traçabilité transit');
-                    break;
-                case 'all':
-                default:
-                    chargerToutesOperations();
-                    ajouterLogSupervision('NAVIGATION', 'Toutes opérations', 'Vue globale Commission');
-                    break;
+                case 'manifestes': chargerManifestes(); break;
+                case 'declarations': chargerDeclarations(); break;
+                case 'transit': chargerTransit(); break;
+                default: chargerToutesOperations(); break;
             }
         }
 
-        async function chargerStatistiques() {
+        // ✅ CORRECTION: Charger MANIFESTES (ÉTAPE 20) - FONCTION COMPLÈTE
+        async function chargerManifestes() {
             try {
-                const response = await fetch(`${API_BASE}/statistiques`);
+                console.log('📦 [Commission] Chargement manifestes ÉTAPE 20...');
+                
+                const response = await fetch(`${API_BASE}/tracabilite/manifeste?limite=30`);
                 const data = await response.json();
                 
-                document.getElementById('workflows-libre-pratique').textContent = data.global?.workflowsLibrePratique || 0;
-                document.getElementById('workflows-transit').textContent = data.global?.workflowsTransit || 0;
-                document.getElementById('pays-actifs').textContent = data.global?.paysConnectes || 0;
-                document.getElementById('corridors-surveilles').textContent = data.corridors?.length || 0;
+                const manifestesList = document.getElementById('manifestes-list');
                 
-                ajouterLogSupervision('STATS', 'Statistiques mises à jour', 
-                    `${data.global?.operationsTotal || 0} opérations, ${data.global?.paysConnectes || 0} pays`);
+                if (data.status === 'SUCCESS' && data.manifestes && data.manifestes.length > 0) {
+                    manifestesList.innerHTML = data.manifestes.map(manifeste => `
+                        <div class="operation-item manifeste-item commission-item">
+                            <div class="operation-header">
+                                <div class="operation-title">📦 ${manifeste.typeOperation || 'TRANSMISSION_MANIFESTE'}</div>
+                                <div class="operation-time">${formatDateTime(manifeste.dateEnregistrement)}</div>
+                                <div class="etape-badge etape-20">ÉTAPE 20</div>
+                            </div>
+                            <div class="operation-details commission-details">
+                                <div><strong>N° Opération:</strong> ${manifeste.numeroOperation || manifeste.id}</div>
+                                <div><strong>Corridor:</strong> ${manifeste.corridor}</div>
+                                <div><strong>Navire:</strong> ${manifeste.navire || 'N/A'}</div>
+                                <div><strong>Nb Articles:</strong> ${manifeste.nombreArticles || 'N/A'}</div>
+                                <div><strong>Commission:</strong> <span class="badge badge-commission">TRACÉ UEMOA</span></div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    manifestesList.innerHTML = `
+                        <div class="no-data commission-no-data">
+                            <h3>📦 Aucun manifeste tracé</h3>
+                            <p>Aucune notification manifeste (ÉTAPE 20) reçue depuis le Kit d'Interconnexion.</p>
+                            <button class="btn btn-accent" onclick="simulerManifeste()">🧪 Tester ÉTAPE 20</button>
+                        </div>
+                    `;
+                }
+                
+                ajouterLogSupervision('LOAD_ETAPE_20', 'Manifestes chargés', `${data.manifestes?.length || 0} notifications`);
                 
             } catch (error) {
-                console.error('❌ [Commission] Erreur chargement statistiques:', error);
-                ajouterLogSupervision('ERROR', 'Erreur statistiques', error.message);
+                console.error('❌ [Commission] Erreur chargement manifestes:', error);
+                document.getElementById('manifestes-list').innerHTML = `
+                    <div class="error-message commission-error">
+                        <p class="text-danger">❌ Erreur chargement manifestes ÉTAPE 20</p>
+                        <button class="btn btn-secondary" onclick="chargerManifestes()">🔄 Réessayer</button>
+                    </div>
+                `;
             }
         }
 
+        // ✅ CORRECTION: Charger DÉCLARATIONS (ÉTAPE 21) - FONCTION COMPLÈTE
+        async function chargerDeclarations() {
+            try {
+                console.log('📋 [Commission] Chargement déclarations ÉTAPE 21...');
+                
+                const response = await fetch(`${API_BASE}/tracabilite/declaration?limite=30`);
+                const data = await response.json();
+                
+                const declarationsList = document.getElementById('declarations-list');
+                
+                if (data.status === 'SUCCESS' && data.declarations && data.declarations.length > 0) {
+                    declarationsList.innerHTML = data.declarations.map(declaration => `
+                        <div class="operation-item declaration-item commission-item">
+                            <div class="operation-header">
+                                <div class="operation-title">📋 ${declaration.typeOperation || 'COMPLETION_LIBRE_PRATIQUE'}</div>
+                                <div class="operation-time">${formatDateTime(declaration.dateEnregistrement)}</div>
+                                <div class="etape-badge etape-21">ÉTAPE 21</div>
+                            </div>
+                            <div class="operation-details commission-details">
+                                <div><strong>N° Opération:</strong> ${declaration.numeroOperation || declaration.id}</div>
+                                <div><strong>Corridor:</strong> ${declaration.corridor}</div>
+                                <div><strong>Déclaration:</strong> ${declaration.numeroDeclaration || 'N/A'}</div>
+                                <div><strong>Montant:</strong> ${declaration.valeurTotaleCaf ? formatNumber(declaration.valeurTotaleCaf) + ' FCFA' : 'N/A'}</div>
+                                <div><strong>Finalisation:</strong> <span class="badge badge-final">WORKFLOW TERMINÉ</span></div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    declarationsList.innerHTML = `
+                        <div class="no-data commission-no-data">
+                            <h3>📋 Aucune déclaration tracée</h3>
+                            <p>Aucune finalisation workflow (ÉTAPE 21) reçue depuis le Kit d'Interconnexion.</p>
+                            <button class="btn btn-accent" onclick="simulerDeclaration()">🧪 Tester ÉTAPE 21</button>
+                        </div>
+                    `;
+                }
+                
+                ajouterLogSupervision('LOAD_ETAPE_21', 'Déclarations chargées', `${data.declarations?.length || 0} finalisations`);
+                
+            } catch (error) {
+                console.error('❌ [Commission] Erreur chargement déclarations:', error);
+                document.getElementById('declarations-list').innerHTML = `
+                    <div class="error-message commission-error">
+                        <p class="text-danger">❌ Erreur chargement déclarations ÉTAPE 21</p>
+                        <button class="btn btn-secondary" onclick="chargerDeclarations()">🔄 Réessayer</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ✅ CORRECTION: Charger TRANSIT (ÉTAPE 16) - FONCTION COMPLÈTE
+        async function chargerTransit() {
+            try {
+                console.log('🚛 [Commission] Chargement transit ÉTAPE 16...');
+                
+                const response = await fetch(`${API_BASE}/tracabilite/enregistrer?limite=30&etapeWorkflow=16`);
+                const data = await response.json();
+                
+                const transitList = document.getElementById('transit-list');
+                
+                if (data.status === 'SUCCESS' && data.operations && data.operations.length > 0) {
+                    const operationsTransit = data.operations.filter(op => 
+                        op.typeOperation && (op.typeOperation.includes('TRANSIT') || op.etapeWorkflow === '16')
+                    );
+                    
+                    if (operationsTransit.length > 0) {
+                        transitList.innerHTML = operationsTransit.map(transit => `
+                            <div class="operation-item transit-item commission-item">
+                                <div class="operation-header">
+                                    <div class="operation-title">🚛 ${transit.typeOperation || 'COMPLETION_TRANSIT'}</div>
+                                    <div class="operation-time">${formatDateTime(transit.dateEnregistrement)}</div>
+                                    <div class="etape-badge etape-16">ÉTAPE 16</div>
+                                </div>
+                                <div class="operation-details commission-details">
+                                    <div><strong>N° Opération:</strong> ${transit.numeroOperation || transit.id}</div>
+                                    <div><strong>Corridor:</strong> ${transit.corridor}</div>
+                                    <div><strong>Transit:</strong> ${transit.donneesMetier?.numero_declaration_transit || 'N/A'}</div>
+                                    <div><strong>Traçabilité:</strong> <span class="badge badge-transit">TRANSIT FINALISÉ</span></div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        transitList.innerHTML = `
+                            <div class="no-data commission-no-data">
+                                <h3>🚛 Aucune opération transit tracée</h3>
+                                <p>Aucune finalisation transit (ÉTAPE 16) reçue depuis le Kit d'Interconnexion.</p>
+                                <button class="btn btn-accent" onclick="simulerTransit()">🧪 Tester ÉTAPE 16</button>
+                            </div>
+                        `;
+                    }
+                    
+                    ajouterLogSupervision('LOAD_ETAPE_16', 'Transit chargé', `${operationsTransit.length} opérations`);
+                } else {
+                    transitList.innerHTML = `
+                        <div class="no-data commission-no-data">
+                            <h3>🚛 Aucune opération transit</h3>
+                            <p>Aucune opération de transit tracée pour le moment.</p>
+                            <button class="btn btn-accent" onclick="simulerTransit()">🧪 Tester ÉTAPE 16</button>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ [Commission] Erreur chargement transit:', error);
+                document.getElementById('transit-list').innerHTML = `
+                    <div class="error-message commission-error">
+                        <p class="text-danger">❌ Erreur chargement transit ÉTAPE 16</p>
+                        <button class="btn btn-secondary" onclick="chargerTransit()">🔄 Réessayer</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ✅ Charger TOUTES opérations
         async function chargerToutesOperations() {
             try {
+                console.log('🔍 [Commission] Chargement toutes opérations tracées...');
+                
                 const response = await fetch(`${API_BASE}/tracabilite/enregistrer?limite=50`);
                 const data = await response.json();
                 
@@ -558,38 +668,47 @@
             }
         }
 
-        // Fonctions similaires pour chargerManifestes, chargerDeclarations, chargerTransit...
-        async function chargerManifestes() {
-            // Implementation simplifiée pour l'example
-            ajouterLogSupervision('LOAD_ETAPE_20', 'Chargement manifestes', 'ÉTAPE 20');
-            document.getElementById('manifestes-list').innerHTML = '<p class="loading">Chargement manifestes ÉTAPE 20...</p>';
-        }
-
-        async function chargerDeclarations() {
-            ajouterLogSupervision('LOAD_ETAPE_21', 'Chargement déclarations', 'ÉTAPE 21'); 
-            document.getElementById('declarations-list').innerHTML = '<p class="loading">Chargement déclarations ÉTAPE 21...</p>';
-        }
-
-        async function chargerTransit() {
-            ajouterLogSupervision('LOAD_ETAPE_16', 'Chargement transit', 'ÉTAPE 16');
-            document.getElementById('transit-list').innerHTML = '<p class="loading">Chargement transit ÉTAPE 16...</p>';
-        }
-
-        async function chargerToutesLesDonneesCommission() {
+        // ✅ CORRECTION: Charger statistiques avec mise à jour graphiques
+        async function chargerStatistiques() {
             try {
-                await Promise.all([
-                    chargerStatistiques(),
-                    activeTab === 'manifestes' ? chargerManifestes() : 
-                    activeTab === 'declarations' ? chargerDeclarations() : 
-                    activeTab === 'transit' ? chargerTransit() :
-                    chargerToutesOperations()
-                ]);
+                const response = await fetch(`${API_BASE}/statistiques`);
+                const data = await response.json();
+                
+                // Mise à jour des métriques
+                document.getElementById('workflows-libre-pratique').textContent = data.global?.workflowsLibrePratique || 0;
+                document.getElementById('workflows-transit').textContent = data.global?.workflowsTransit || 0;
+                document.getElementById('pays-actifs').textContent = data.global?.paysConnectes || 0;
+                document.getElementById('corridors-surveilles').textContent = data.corridors?.length || 0;
+                
+                // ✅ CORRECTION: Mise à jour du graphique
+                if (data.parType && Object.keys(data.parType).length > 0) {
+                    mettreAJourGraphiqueEtapes(data.parType);
+                }
+                
+                // ✅ CORRECTION: Affichage des pays
+                if (data.parPays && data.parPays.length > 0) {
+                    afficherPaysUEMOA(data.parPays);
+                }
+                
+                ajouterLogSupervision('STATS', 'Statistiques mises à jour', 
+                    `${data.global?.operationsTotal || 0} opérations`);
+                
             } catch (error) {
-                console.error('❌ [Commission] Erreur chargement global:', error);
-                afficherNotification('Erreur lors du chargement des données Commission', 'error');
+                console.error('❌ [Commission] Erreur chargement statistiques:', error);
+                ajouterLogSupervision('ERROR', 'Erreur statistiques', error.message);
             }
         }
 
+        // ✅ Charger toutes les données Commission
+        async function chargerToutesLesDonneesCommission() {
+            await chargerStatistiques();
+            if (activeTab === 'manifestes') await chargerManifestes();
+            else if (activeTab === 'declarations') await chargerDeclarations();
+            else if (activeTab === 'transit') await chargerTransit();
+            else await chargerToutesOperations();
+        }
+
+        // ✅ Initialiser graphiques Commission
         function initGraphiques() {
             const ctxEtapes = document.getElementById('chart-etapes-workflows');
             chartEtapesWorkflows = new Chart(ctxEtapes, {
@@ -614,24 +733,102 @@
             });
         }
 
+        // ✅ CORRECTION: Mise à jour graphique étapes
+        function mettreAJourGraphiqueEtapes(operationsParType) {
+            if (!chartEtapesWorkflows || !chartEtapesWorkflows.data) {
+                console.log('⚠️ [Commission] Graphique non initialisé');
+                return;
+            }
+            
+            let etape20 = 0, etape21 = 0, etape16 = 0, autres = 0;
+            
+            Object.keys(operationsParType).forEach(type => {
+                const count = operationsParType[type];
+                const typeUpper = type.toUpperCase();
+                
+                if (typeUpper.includes('MANIFESTE') || typeUpper.includes('TRANSMISSION')) {
+                    etape20 += count;
+                } else if (typeUpper.includes('COMPLETION') || typeUpper.includes('DECLARATION')) {
+                    etape21 += count;
+                } else if (typeUpper.includes('TRANSIT')) {
+                    etape16 += count;
+                } else {
+                    autres += count;
+                }
+            });
+            
+            chartEtapesWorkflows.data.datasets[0].data = [etape20, etape21, etape16, autres];
+            chartEtapesWorkflows.update('none');
+            
+            console.log('📊 [Commission] Graphique mis à jour:', { etape20, etape21, etape16, autres });
+        }
+
+        // ✅ CORRECTION: Affichage pays UEMOA
+        function afficherPaysUEMOA(statistiquesParPays) {
+            const paysUEMOAList = document.getElementById('pays-uemoa-list');
+            
+            if (!paysUEMOAList) {
+                console.log('⚠️ [Commission] Element pays-uemoa-list non trouvé');
+                return;
+            }
+            
+            if (statistiquesParPays.length > 0) {
+                paysUEMOAList.innerHTML = statistiquesParPays.map(pays => {
+                    const paysInfo = PAYS_UEMOA[pays.code] || { nom: pays.code, ville: 'N/A', type: 'INCONNU', flag: '🏳️' };
+                    const totalOperations = pays.operationsEnvoyees + pays.operationsRecues;
+                    
+                    return `
+                        <div class="pays-item ${paysInfo.type.toLowerCase()}" data-pays="${pays.code}">
+                            <span class="pays-flag">${paysInfo.flag}</span>
+                            <div class="pays-info">
+                                <strong>${paysInfo.nom}</strong> (${pays.code})<br>
+                                <small>${paysInfo.ville} - ${paysInfo.type === 'COTIER' ? 'Prime abord' : 'Destination'}</small>
+                            </div>
+                            <div class="pays-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value">${pays.operationsEnvoyees}</span>
+                                    <span class="stat-label">Envoyées</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${pays.operationsRecues}</span>
+                                    <span class="stat-label">Reçues</span>
+                                </div>
+                            </div>
+                            <span class="pays-status ${totalOperations > 0 ? 'active' : 'inactive'}">
+                                ${totalOperations > 0 ? '🟢' : '⚪'}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                paysUEMOAList.innerHTML = `
+                    <div class="no-data commission-no-data">
+                        <p>Aucune activité détectée depuis les pays membres UEMOA.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Fonction pour initialiser le suivi des pays
         function initialiserSuiviPaysUEMOA() {
             console.log('🌍 [Commission] Initialisation suivi pays membres UEMOA...');
+            
             Object.keys(PAYS_UEMOA).forEach(codePays => {
                 const paysInfo = PAYS_UEMOA[codePays];
-                console.log(`📍 ${paysInfo.flag} ${paysInfo.nom} (${codePays}) - ${paysInfo.ville} - ${paysInfo.type}`);
+                console.log(`📍 ${paysInfo.flag} ${paysInfo.nom} (${codePays})`);
                 
                 const statusElement = document.getElementById(`status-${codePays}`);
                 if (statusElement) {
-                    statusElement.textContent = '⚪'; // Statut inactif par défaut
+                    statusElement.textContent = '⚪';
                 }
             });
             
             ajouterLogSupervision('INIT_PAYS', 'Pays UEMOA initialisés', `${Object.keys(PAYS_UEMOA).length} pays membres`);
         }
 
-        // ✅ Tests Kit d'Interconnexion
+        // ✅ Tests Kit d'Interconnexion depuis Commission
         async function testerConnectiviteKit() {
-            ajouterLogSupervision('TEST_KIT', 'Test connectivité Kit', 'Vérification Kit d\'Interconnexion...');
+            ajouterLogSupervision('TEST_KIT', 'Test connectivité Kit', 'Vérification Kit MuleSoft...');
             afficherNotification('🔧 Test connectivité Kit d\'Interconnexion...', 'info');
             
             try {
@@ -653,7 +850,7 @@
                             <h4>✅ Test Connectivité Kit Réussi</h4>
                             <p><strong>Status:</strong> ${data.resultat?.status || 'UP'}</p>
                             <p><strong>Latence:</strong> ${data.resultat?.latence || 'N/A'} ms</p>
-                            <p><strong>Source:</strong> Commission → Kit d'Interconnexion</p>
+                            <p><strong>Source:</strong> ${data.source || 'Commission → Kit MuleSoft'}</p>
                             <small>Testé le ${new Date().toLocaleString('fr-FR')}</small>
                         </div>
                     `;
@@ -668,7 +865,7 @@
                     <div class="test-result error">
                         <h4>❌ Test Connectivité Kit Échoué</h4>
                         <p><strong>Erreur:</strong> ${error.message}</p>
-                        <p>Le Kit d'Interconnexion n'est pas accessible.</p>
+                        <p>Le Kit MuleSoft d'Interconnexion n'est pas accessible depuis la Commission.</p>
                         <small>Testé le ${new Date().toLocaleString('fr-FR')}</small>
                     </div>
                 `;
@@ -676,8 +873,8 @@
         }
 
         async function lancerDiagnosticKit() {
-            ajouterLogSupervision('DIAGNOSTIC_KIT', 'Diagnostic Kit', 'Diagnostic complet...');
-            afficherNotification('🩺 Diagnostic complet Kit...', 'info');
+            ajouterLogSupervision('DIAGNOSTIC_KIT', 'Diagnostic Kit', 'Diagnostic complet en cours...');
+            afficherNotification('🩺 Diagnostic complet Kit d\'Interconnexion...', 'info');
             
             try {
                 const response = await fetch(`${API_BASE}/kit/diagnostic`);
@@ -731,8 +928,8 @@
         }
 
         async function synchroniserAvecKit() {
-            ajouterLogSupervision('SYNC_KIT', 'Synchronisation Kit', 'En cours...');
-            afficherNotification('🔄 Synchronisation avec Kit...', 'info');
+            ajouterLogSupervision('SYNC_KIT', 'Synchronisation Kit', 'Synchronisation en cours...');
+            afficherNotification('🔄 Synchronisation avec Kit d\'Interconnexion...', 'info');
             
             try {
                 const response = await fetch(`${API_BASE}/kit/synchroniser`, {
@@ -753,23 +950,7 @@
             }
         }
 
-        // ✅ Simulations Commission
-        async function simulerOperationTest() {
-            const operationTest = {
-                typeOperation: 'TEST_COMMISSION_UEMOA',
-                numeroOperation: `TEST_COMM_${Date.now()}`,
-                paysOrigine: 'UEMOA',
-                paysDestination: 'TEST',
-                donneesMetier: {
-                    test: true,
-                    source: 'Commission UEMOA Dashboard Test',
-                    commission: { nom: 'Commission UEMOA', siege: 'Ouagadougou' }
-                }
-            };
-            
-            await envoyerOperationTestCommission(operationTest, 'test général Commission');
-        }
-
+        // ✅ Simulations spécifiques Commission
         async function simulerManifeste() {
             const manifesteTest = {
                 typeOperation: 'TEST_TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE',
@@ -779,6 +960,10 @@
                 donneesMetier: {
                     numero_manifeste: Math.floor(Math.random() * 9999) + 1000,
                     navire: 'TEST VESSEL ETAPE 20',
+                    consignataire: 'TEST CONSIGNEE SENEGAL',
+                    port_debarquement: 'Port de Dakar',
+                    nombre_articles: Math.floor(Math.random() * 5) + 1,
+                    valeur_approximative: Math.floor(Math.random() * 50000000) + 1000000,
                     etape_workflow: 20
                 }
             };
@@ -793,7 +978,11 @@
                 paysDestination: 'SEN',
                 donneesMetier: {
                     numero_declaration: `DEC_TEST_${Math.floor(Math.random() * 9999) + 1000}`,
+                    manifeste_origine: `MAN_${Math.floor(Math.random() * 9999) + 1000}`,
+                    montant_paye: Math.floor(Math.random() * 5000000) + 100000,
+                    reference_paiement: `PAY_TEST_${Date.now()}`,
                     workflow_complete: true,
+                    etapes_totales: 21,
                     etape_workflow: 21
                 }
             };
@@ -808,10 +997,31 @@
                 paysDestination: 'MLI',
                 donneesMetier: {
                     numero_declaration_transit: `TRA_TEST_${Math.floor(Math.random() * 9999) + 1000}`,
+                    transporteur: 'TEST TRANSPORT SAHEL',
+                    delai_route: '72 heures',
+                    itineraire: 'Test Dakar-Bamako',
+                    arrivee_confirmee: true,
+                    etapes_totales: 16,
                     etape_workflow: 16
                 }
             };
             await envoyerOperationTestCommission(transitTest, 'transit ÉTAPE 16');
+        }
+
+        async function simulerOperationTest() {
+            const operationTest = {
+                typeOperation: 'TEST_COMMISSION_UEMOA',
+                numeroOperation: `TEST_COMM_${Date.now()}`,
+                paysOrigine: 'UEMOA',
+                paysDestination: 'TEST',
+                donneesMetier: {
+                    test: true,
+                    source: 'Commission UEMOA Dashboard Test',
+                    timestamp: new Date().toISOString(),
+                    commission: { nom: 'Commission UEMOA', siege: 'Ouagadougou, Burkina Faso' }
+                }
+            };
+            await envoyerOperationTestCommission(operationTest, 'test général Commission');
         }
 
         async function envoyerOperationTestCommission(operation, typeOperation) {
@@ -834,7 +1044,6 @@
                 } else {
                     const error = await response.json();
                     afficherNotification(`❌ Erreur test ${typeOperation}: ${error.message}`, 'error');
-                    ajouterLogSupervision('ERROR', `Simulation ${typeOperation} échouée`, error.message);
                 }
             } catch (error) {
                 afficherNotification(`❌ Erreur technique test ${typeOperation}`, 'error');
@@ -847,44 +1056,25 @@
                 ajouterLogSupervision('RAPPORT', 'Génération rapport', 'En cours...');
                 afficherNotification('📊 Génération rapport supervision UEMOA...', 'info');
                 
-                const [statsResponse, operationsResponse] = await Promise.all([
-                    fetch(`${API_BASE}/statistiques`),
-                    fetch(`${API_BASE}/tracabilite/enregistrer?limite=100`)
-                ]);
+                const response = await fetch(`${API_BASE}/rapports/exporter?format=csv&type=commission`);
                 
-                const stats = await statsResponse.json();
-                const operations = await operationsResponse.json();
-                
-                const rapport = {
-                    commission: {
-                        nom: 'Commission UEMOA',
-                        siege: 'Ouagadougou, Burkina Faso'
-                    },
-                    periode: {
-                        fin: new Date().toISOString().split('T')[0],
-                        duree: '7 jours'
-                    },
-                    supervision: {
-                        operationsTotal: stats.global?.operationsTotal || 0,
-                        paysActifs: stats.global?.paysConnectes || 0
-                    },
-                    dateGeneration: new Date().toISOString()
-                };
-                
-                const blob = new Blob([JSON.stringify(rapport, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `commission-uemoa-rapport-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                afficherNotification('📥 Rapport supervision UEMOA généré', 'success');
-                ajouterLogSupervision('RAPPORT', 'Rapport généré', 'Succès');
-                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `commission-uemoa-rapport-${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    afficherNotification('📥 Rapport supervision UEMOA généré (CSV)', 'success');
+                    ajouterLogSupervision('RAPPORT', 'Rapport généré', 'Format CSV');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
             } catch (error) {
                 afficherNotification('❌ Erreur génération rapport', 'error');
                 ajouterLogSupervision('ERROR', 'Erreur rapport', error.message);
@@ -893,7 +1083,7 @@
 
         async function exporterDonnees() {
             try {
-                const response = await fetch(`${API_BASE}/rapports/exporter?format=json&type=commission`);
+                const response = await fetch(`${API_BASE}/rapports/exporter?format=csv&type=commission`);
                 
                 if (response.ok) {
                     const blob = await response.blob();
@@ -901,14 +1091,14 @@
                     
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `commission-uemoa-export-${new Date().toISOString().split('T')[0]}.json`;
+                    a.download = `commission-uemoa-export-${new Date().toISOString().split('T')[0]}.csv`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                     
-                    afficherNotification('📥 Données Commission UEMOA exportées', 'success');
-                    ajouterLogSupervision('EXPORT', 'Export Commission effectué');
+                    afficherNotification('📥 Données Commission UEMOA exportées (CSV)', 'success');
+                    ajouterLogSupervision('EXPORT', 'Export Commission effectué (CSV)');
                 } else {
                     throw new Error(`HTTP ${response.status}`);
                 }
@@ -960,16 +1150,33 @@
         function getOperationIcon(type) {
             const icons = {
                 'TRANSMISSION_MANIFESTE_LIBRE_PRATIQUE': '📦',
+                'TRANSMISSION_MANIFESTE': '📦',
                 'COMPLETION_LIBRE_PRATIQUE': '📋',
+                'SOUMISSION_DECLARATION_DOUANIERE': '📋', 
                 'COMPLETION_TRANSIT': '🚛',
+                'TRANSIT': '🚛',
                 'TEST_COMMISSION_UEMOA': '🧪',
+                'TEST_COMMISSION': '🧪',
                 'ETAPE_20': '📦',
                 'ETAPE_21': '📋',
                 'ETAPE_16': '🚛',
                 'TEST_KIT': '🔧',
                 'DIAGNOSTIC_KIT': '🩺',
+                'TEST_NOTIFICATION': '📊',
+                'SYNC_KIT': '🔄',
+                'TEST_SIMULATION': '🧪',
                 'SYSTEME': '🏛️',
+                'LOAD_ETAPE_20': '📦',
+                'LOAD_ETAPE_21': '📋',
+                'LOAD_ETAPE_16': '🚛',
+                'LOAD_ALL': '📥',
                 'STATS': '📊',
+                'RAPPORT': '📊',
+                'EXPORT': '📥',
+                'NAVIGATION': '🧭',
+                'INIT_PAYS': '🌍',
+                'FILTER': '🔍',
+                'ADMIN': '⚙️',
                 'ERROR': '❌'
             };
             return icons[type] || '📄';
@@ -979,25 +1186,24 @@
             if (!dateString) return 'Date inconnue';
             const date = new Date(dateString);
             return date.toLocaleString('fr-FR', {
-                day: '2-digit',
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
             });
+        }
+        
+        function formatNumber(num) {
+            if (!num && num !== 0) return 'N/A';
+            return num.toLocaleString('fr-FR');
         }
 
         function afficherNotification(message, type = 'info') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.className = `notification ${type} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
+            setTimeout(() => notification.classList.remove('show'), 4000);
         }
 
-        // Nettoyage lors de la fermeture
+        // ✅ Nettoyage lors de la fermeture
         window.addEventListener('beforeunload', () => {
             if (statusInterval) clearInterval(statusInterval);
             if (refreshInterval) clearInterval(refreshInterval);
