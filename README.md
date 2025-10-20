@@ -56,16 +56,16 @@ npm run dev
 vercel dev
 ```
 
-Le système démarre sur **http://localhost:3003**
+Le système démarre sur **http://64.225.5.75:3003**
 
 ### URLs principales
 
-- 🏛️ **Dashboard** : http://localhost:3003
-- 🏥 **Health Check** : http://localhost:3003/api/health
-- 📊 **Statistiques** : http://localhost:3003/api/statistiques
-- 📦 **ÉTAPE 20** : http://localhost:3003/api/tracabilite/manifeste
-- 📋 **ÉTAPE 21** : http://localhost:3003/api/tracabilite/declaration
-- 🚛 **ÉTAPE 16** : http://localhost:3003/api/tracabilite/enregistrer
+- 🏛️ **Dashboard** : http://64.225.5.75:3003
+- 🏥 **Health Check** : http://64.225.5.75:3003/api/health
+- 📊 **Statistiques** : http://64.225.5.75:3003/api/statistiques
+- 📦 **ÉTAPE 20** : http://64.225.5.75:3003/api/tracabilite/manifeste
+- 📋 **ÉTAPE 21** : http://64.225.5.75:3003/api/tracabilite/declaration
+- 🚛 **ÉTAPE 16** : http://64.225.5.75:3003/api/tracabilite/enregistrer
 
 ---
 
