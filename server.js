@@ -50,6 +50,7 @@ const apiRouter = {
   // ✅ ÉTAPES 20-21 et 16: Endpoint traçabilité centrale (principal)
   'GET /api/tracabilite/enregistrer': () => require('./api/tracabilite/enregistrer'),
   'POST /api/tracabilite/enregistrer': () => require('./api/tracabilite/enregistrer'),
+  'POST /api/tracabilite/transit': () => require('./api/tracabilite/transit'),
   
   // ✅ ÉTAPE 20: Endpoints spécialisés MANIFESTES (notifications)
   'GET /api/tracabilite/manifeste': () => require('./api/tracabilite/manifeste'),
